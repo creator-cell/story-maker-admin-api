@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+openai
+requests
+moviepy
+python-multipart
+ffmpeg-python
+elevenlabs
+transformers
+diffusers

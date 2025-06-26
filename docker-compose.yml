@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth
+      - user
+    env_file:
+      - ./gateway/.env
+    networks:
+      - backend
+
+  auth:
+    build: ./services/auth
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./services/auth/.env.local
+    networks:
+      - backend
+
+  user:
+    build: ./services/user
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./services/user/.env.local
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
