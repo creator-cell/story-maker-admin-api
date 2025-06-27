@@ -16,11 +16,11 @@ export const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    if (error) {
-      return res.status(500).json({ message: i18n.__('error.generic') });
-    }
+    // if (error) {
+    //   return res.status(500).json({ message: i18n.__('error.generic') });
+    // }
 
-    res.status(201).json({ message: i18n.__('user.created'), user });
+    res.status(201).json({ message:user });
   } catch (err) {
     res.status(500).json({ message: i18n.__('error.generic') });
   }
@@ -32,23 +32,23 @@ export const login = async (req, res) => {
 
   try {
     const [user, error] = await userRepository.findOne({ email });
-
+    console.log("user",user);
     if (error || !user) {
-      return res.status(400).json({ message: i18n.__('auth.invalid_credentials') });
+      return res.status(400).json({ message: "wrong email" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: i18n.__('auth.invalid_credentials') });
+      return res.status(400).json({ message: "wrong credentials" });
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
 
-    res.json({ message: i18n.__('auth.login_success'), token });
+    res.json({ message: "login success", token });
   } catch (err) {
-    res.status(500).json({ message: i18n.__('error.generic') });
+    res.status(500).json({ message: "something went wrong" });
   }
 };
 
@@ -100,3 +100,5 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: i18n.__('error.generic') });
   }
 };
+
+
