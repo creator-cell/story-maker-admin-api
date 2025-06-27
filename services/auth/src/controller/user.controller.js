@@ -3,10 +3,16 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import i18n from '../i18n/index.js'; // Same format as your validation
 import crypto from 'crypto';
+import { sendResetPasswordEmail } from '../respositories/emailRepository.js';
+import roleModel from '../models/role.model.js';
 // Create User
 export const createUser = async (req, res) => {
-  const { name, email, password } = req.body;
-
+  const { name, email, password, role } = req.body;
+    const roleName = role || 'user';
+    let userRole = await roleModel.findOne({ name: roleName });
+    if (!userRole) {
+      userRole = await roleModel.create({ name: roleName });
+    }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -14,6 +20,7 @@ export const createUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role:userRole
     });
 
    
@@ -115,6 +122,8 @@ export const forgotPassword = async (req, res) => {
     
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+    await sendResetPasswordEmail(user.email,resetToken,user.name);
+
 
    
     const [updateError, updatedUser] = await userRepository.findOneAndUpdate(

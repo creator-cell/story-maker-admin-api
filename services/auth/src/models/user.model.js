@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, default: 'user' },
+  roles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role' }],
   resetPasswordToken : {type:String},
   resetPasswordExpires : {type:Date},
   createdAt: { type: Date, default: Date.now },
