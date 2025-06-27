@@ -63,3 +63,23 @@ export const validateLogin = [
     .notEmpty()
     .withMessage((value, { req }) => req.t('validation.password_missing')),
 ];
+
+export const validateForgotPassword = [
+  body('email')
+    .isEmail()
+    .withMessage((value, { req }) => req.t('validation.email_required')),
+];
+
+export const validateResetPassword = [
+  body('token')
+    .notEmpty()
+    .withMessage((value, { req }) => req.t('validation.token_required')),
+    
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage((value, { req }) => req.t('validation.password_min_length')),
+];
+
+
+
+
