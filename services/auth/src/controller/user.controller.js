@@ -1,7 +1,7 @@
 import userRepository from '../respositories/userRepository.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import i18n from '../i18n/index.js'; // Same format as your validation
+import i18n from '../i18n/index.js'; 
 import crypto from 'crypto';
 import { sendResetPasswordEmail } from '../respositories/emailRepository.js';
 import roleModel from '../models/role.model.js';
@@ -62,14 +62,14 @@ export const getUserById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [user, error] = await userRepository.findOneById(id, { password: 0 });
+    const [error, user] = await userRepository.findOneById(id, { password: 0 });
     if (error || !user) {
-      return res.status(404).json({ message: i18n.__('user.not_found') });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.json({ user });
   } catch (err) {
-    res.status(500).json({ message: i18n.__('error.generic') });
+    res.status(500).json({ message:"something went wrong" });
   }
 };
 
@@ -79,14 +79,14 @@ export const updateUser = async (req, res) => {
   const updateData = req.body;
 
   try {
-    const [user, error] = await userRepository.findOneAndUpdate({ _id: id }, updateData);
+    const [error,user ] = await userRepository.findOneAndUpdate({ _id: id }, updateData);
     if (error || !user) {
-      return res.status(400).json({ message: i18n.__('user.update_failed') });
+      return res.status(400).json({ message: "user update_failed"});
     }
 
-    res.json({ message: i18n.__('user.updated'), user });
+    res.json({ message: "user updated", user });
   } catch (err) {
-    res.status(500).json({ message: i18n.__('error.generic') });
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -97,12 +97,12 @@ export const deleteUser = async (req, res) => {
   try {
     const [result, error] = await userRepository.deleteOne({ _id: id });
     if (error || result.deletedCount === 0) {
-      return res.status(400).json({ message: i18n.__('user.delete_failed') });
+      return res.status(400).json({ message: "failed to delete user" });
     }
 
-    res.json({ message: i18n.__('user.deleted') });
+    res.json({ message: "user deleted" });
   } catch (err) {
-    res.status(500).json({ message: i18n.__('error.generic') });
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -116,7 +116,7 @@ export const forgotPassword = async (req, res) => {
     const [error, user] = await userRepository.findOne({ email });
     
     if (error || !user) {
-      return res.status(404).json({ message: i18n.__('user.not_found') });
+      return res.status(404).json({ message: "User not found" });
     }
 
     
@@ -135,19 +135,19 @@ export const forgotPassword = async (req, res) => {
     );
 
     if (updateError || !updatedUser) {
-      return res.status(500).json({ message: i18n.__('error.generic') });
+      return res.status(500).json({ message: "Something went wrong" });
     }
 
     
     
     res.json({ 
-      message: 'password.reset_email_sent',
+      message: 'password. reset email sent',
      
       resetToken: resetToken 
     });
 
   } catch (err) {
-    res.status(500).json({ message: i18n.__('error.generic') });
+    res.status(500).json({ message:'error' });
   }
 };
 
