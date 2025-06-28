@@ -30,8 +30,8 @@ export const validateRequest = ({ body, params, query }) => (req, res, next) => 
 const permit = (...allowedRoles) => {
   return (req, res, next) => {
     const { role } = req.user;
-    console.log(req.user);
-    console.log("allowed roles");
+    console.log('Dynamic role:', role);
+    console.log('Allowed roles:', allowedRoles);
 
     if (allowedRoles.includes(role)) {
       next();
