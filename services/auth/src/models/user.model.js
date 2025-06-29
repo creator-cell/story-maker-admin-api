@@ -4,9 +4,10 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
- role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
-  resetPasswordToken : {type:String},
-  resetPasswordExpires : {type:Date},
+  role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
+  phone: {type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
 
 });

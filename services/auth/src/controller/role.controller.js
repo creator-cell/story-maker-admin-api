@@ -6,8 +6,10 @@ export const createRole = async (req, res) => {
 
   try {
     
-    const [existingRole, findError] = await roleRepository.findByName(name);
+    const [findError,existingRole, ] = await roleRepository.findByName(name);
+    console.log(existingRole, findError);
     if (findError) {
+     
       return res.status(500).json({ message: 'Something went wrong' });
     }
 
@@ -16,7 +18,7 @@ export const createRole = async (req, res) => {
     }
 
    
-    const [role, error] = await roleRepository.insertOne({ name });
+    const [ error,role] = await roleRepository.insertOne({ name });
 
     if (error) {
       return res.status(500).json({ message: 'Something went wrong' });
