@@ -17,6 +17,7 @@ export const validateCreateUser = [
     .withMessage((value, { req }) => req.t('validation.phone_required')),
 
   body('password')
+  .optional()
     .isLength({ min: 6 })
     .withMessage((value, { req }) => req.t('validation.password_required')),
 ];

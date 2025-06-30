@@ -8,7 +8,10 @@ const userSchema = new mongoose.Schema({
   phone: {type: String },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+  emailVerified: { type: Boolean,default:false},
   createdAt: { type: Date, default: Date.now },
+ 
+   
 
 });
 

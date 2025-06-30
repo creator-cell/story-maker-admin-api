@@ -2,14 +2,14 @@ import roleRepository from '../respositories/roleRepository.js';
 
 // Create Role
 export const createRole = async (req, res) => {
-  const { name } = req.body;
+  const { name,menu,read,write,both } = req.body;
 
   try {
     
     const [findError,existingRole, ] = await roleRepository.findByName(name);
     console.log(existingRole, findError);
     if (findError) {
-     
+     console.log(findError);
       return res.status(500).json({ message: 'Something went wrong' });
     }
 
@@ -18,8 +18,8 @@ export const createRole = async (req, res) => {
     }
 
    
-    const [ error,role] = await roleRepository.insertOne({ name });
-
+    const [ error,role] = await roleRepository.insertOne({ name,menu,read,write,both});
+console.log(name,menu,read,write,both);
     if (error) {
       return res.status(500).json({ message: 'Something went wrong' });
     }
@@ -36,7 +36,7 @@ export const createRole = async (req, res) => {
 // Get all roles
 export const getAllRoles = async (req, res) => {
   try {
-    const [roles, error] = await roleRepository.findMany();
+    const [ error,roles] = await roleRepository.findMany();
 
     if (error) {
       return res.status(500).json({ message: 'Something went wrong' });
@@ -56,7 +56,7 @@ export const getRoleById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [role, error] = await roleRepository.findOneById(id);
+    const [ error,role] = await roleRepository.findOneById(id);
     
     if (error) {
       return res.status(500).json({ message: 'Something went wrong' });
@@ -78,11 +78,12 @@ export const getRoleById = async (req, res) => {
 // Update role
 export const updateRole = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name,menu,read,write,both } = req.body;
 
   try {
  
-    const [existingRole, findError] = await roleRepository.findOneById(id);
+    const [findError,existingRole] = await roleRepository.findOneById(id);
+    console.log(findError,existingRole)
     if (findError) {
       return res.status(500).json({ message: 'Something went wrong' });
     }
@@ -92,21 +93,11 @@ export const updateRole = async (req, res) => {
     }
 
     
-    if (name && name !== existingRole.name) {
-      const [duplicateRole, duplicateError] = await roleRepository.findByName(name);
-      if (duplicateError) {
-        return res.status(500).json({ message: 'Something went wrong' });
-      }
-
-      if (duplicateRole) {
-        return res.status(400).json({ message: 'Role name already exists' });
-      }
-    }
-
+  
     // Update role
-    const [updatedRole, error] = await roleRepository.findOneAndUpdate(
+    const [ error,updatedRole] = await roleRepository.findOneAndUpdate(
       { _id: id }, 
-      { name }
+      { name,menu,read,write,both }
     );
 
     if (error || !updatedRole) {
@@ -128,7 +119,8 @@ export const deleteRole = async (req, res) => {
 
   try {
     // Check if role exists
-    const [existingRole, findError] = await roleRepository.findOneById(id);
+    const [findError,existingRole,] = await roleRepository.findOneById(id);
+    console.log(findError, existingRole);
     if (findError) {
       return res.status(500).json({ message: 'Something went wrong' });
     }
@@ -138,8 +130,8 @@ export const deleteRole = async (req, res) => {
     }
 
     // Delete role
-    const [result, error] = await roleRepository.deleteOne({ _id: id });
-    
+    const [error,result] = await roleRepository.deleteOne({ _id: id });
+   
     if (error || result.deletedCount === 0) {
       return res.status(400).json({ message: 'Failed to delete role' });
     }

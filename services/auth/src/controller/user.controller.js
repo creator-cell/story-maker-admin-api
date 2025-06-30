@@ -1,61 +1,234 @@
 import userRepository from '../respositories/userRepository.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import i18n from '../i18n/index.js'; 
+import i18n from '../i18n/index.js';
 import crypto from 'crypto';
-import { sendResetPasswordEmail } from '../respositories/emailRepository.js';
+import { sendResetPasswordEmail,sendLoginDetailsEmail,sendVerificationEmail } from '../respositories/emailRepository.js';
 import roleModel from '../models/role.model.js';
+
+
 // Create User
 export const createUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
-    const roleName = role || 'user';
-    let userRole = await roleModel.findOne({ name: roleName });
-    if (!userRole) {
-      userRole = await roleModel.create({ name: roleName });
-    }
+  const { name, email, role } = req.body;
+  let { password } = req.body;
+  
+  const roleName = role || 'user';
+  let userRole = await roleModel.findOne({ name: roleName });
+  if (!userRole) {
+    userRole = await roleModel.create({ name: roleName });
+  }
+  
   try {
+    // Generate password if not provided
+    let isPasswordGenerated = false;
+    if (!password) {
+      password = crypto.randomBytes(8).toString('hex'); // Generate 16 character password
+      isPasswordGenerated = true;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [user, error] = await userRepository.insertOne({
+    const [error, user] = await userRepository.insertOne({
       name,
       email,
       password: hashedPassword,
-      role:userRole
+      role: userRole,
+      emailVerified: isPasswordGenerated, // Auto-verify if password was generated
     });
 
+    if (error) {
+      return res.status(500).json({ message: "Failed to create user" });
+    }
+
    
-    res.status(201).json({ message: user });
+    if (isPasswordGenerated) {
+      try {
+        await sendLoginDetailsEmail(email, name, email, password);
+      } catch (emailError) {
+        console.error('Failed to send login details email:', emailError);
+      }
+    } else {
+      try {
+      
+        const verificationToken = jwt.sign(
+          { 
+            userId: user._id,
+            email: user.email,
+            type: 'email_verification'
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        await sendVerificationEmail(email, name, verificationToken);
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+      }
+    }
+
+    // Don't return the password in response
+    const userResponse = { ...user.toObject() };
+    delete userResponse.password;
+
+    res.status(201).json({ 
+      message: isPasswordGenerated 
+        ? "User created successfully. Login details sent to email." 
+        : "User created successfully. Please check your email to verify your account.",
+      user: userResponse,
+      passwordGenerated: isPasswordGenerated,
+      emailVerificationRequired: !isPasswordGenerated
+    });
   } catch (err) {
-    res.status(500).json({ message: i18n.__('error.generic') });
+    console.error('Error creating user:', err);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
+// Email verification endpoint
+export const verifyEmail = async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    
+    if (decoded.type !== 'email_verification') {
+      return res.status(400).json({ message: "Invalid verification token" });
+    }
+
+    const [error, user] = await userRepository.findOneById(decoded.userId);
+
+    if (error || !user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Check if email matches
+    if (user.email !== decoded.email) {
+      return res.status(400).json({ message: "Invalid verification token" });
+    }
+
+    // Check if already verified
+    if (user.emailVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    const [updateError, updatedUser] = await userRepository.findOneAndUpdate(
+      { _id: user._id },
+      { emailVerified: true }
+    );
+
+    if (updateError || !updatedUser) {
+      return res.status(500).json({ message: "Something went wrong" });
+    }
+
+    res.json({ message: "Email verified successfully. You can now login." });
+
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(400).json({ message: "Invalid verification token" });
+    }
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: "Verification token has expired" });
+    }
+    console.error('Error verifying email:', err);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// Resend verification email
+export const resendVerificationEmail = async (email) => {
+  
+  try {
+    const [error, user] = await userRepository.findOne({ email });
+
+    if (error || !user) {
+      return "User not found";
+    }
+
+    if (user.emailVerified) {
+      return({ message: "Email is already verified" });
+    }
+
+    // Generate new JWT verification token
+    const verificationToken = jwt.sign(
+      { 
+        userId: user._id,
+        email: user.email,
+        type: 'email_verification'
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    try {
+      await sendVerificationEmail(email, user.name, verificationToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      return({ message: "Failed to send verification email" });
+    }
+
+    return({ message: "Verification email sent successfully" });
+
+  } catch (err) {
+    console.error('Error resending verification email:', err);
+    return({ message: "Something went wrong" });
+  }
+};
+
+
 // Login
 export const login = async (req, res) => {
+  console.log("req body", req.body);
   const { email, password } = req.body;
- 
  
   try {
     const [error, user] = await userRepository.findOne({email});
    
     if (error || !user) {
-      return res.status(400).json({ message: "wrong email" });
+      return res.status(400).json({ message: "Wrong email" });
+    }
+
+    // Check if email is verified (skip for auto-generated passwords)
+    if (!user.emailVerified) {
+      await resendVerificationEmail(req.body.email)
+      return res.status(400).json({ 
+        message: "Please verify your email before logging in",
+        emailVerificationRequired: true 
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "wrong credentials" });
+      return res.status(400).json({ message: "Wrong credentials" });
     }
+
+    await user.populate('role');
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
 
-    res.json({ message: "login success", token,user });
+    res.json({ message: "Login success", token, user });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+
+export const getAllUser = async (req, res) => {
+   try {
+    const [error, user] = await userRepository.getManyWithPagination();
+    if (error || !user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ user });
   } catch (err) {
     res.status(500).json({ message: "something went wrong" });
   }
-};
+}
 
 // Get user by ID
 export const getUserById = async (req, res) => {
@@ -69,7 +242,7 @@ export const getUserById = async (req, res) => {
 
     res.json({ user });
   } catch (err) {
-    res.status(500).json({ message:"something went wrong" });
+    res.status(500).json({ message: "something went wrong" });
   }
 };
 
@@ -79,9 +252,9 @@ export const updateUser = async (req, res) => {
   const updateData = req.body;
 
   try {
-    const [error,user ] = await userRepository.findOneAndUpdate({ _id: id }, updateData);
+    const [error, user] = await userRepository.findOneAndUpdate({ _id: id }, updateData);
     if (error || !user) {
-      return res.status(400).json({ message: "user update_failed"});
+      return res.status(400).json({ message: "user update_failed" });
     }
 
     res.json({ message: "user updated", user });
@@ -95,7 +268,7 @@ export const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [result, error] = await userRepository.deleteOne({ _id: id });
+    const [ error,result] = await userRepository.deleteOne({ _id: id });
     if (error || result.deletedCount === 0) {
       return res.status(400).json({ message: "failed to delete user" });
     }
@@ -112,20 +285,20 @@ export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    
+
     const [error, user] = await userRepository.findOne({ email });
-    
+
     if (error || !user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
-    await sendResetPasswordEmail(user.email,resetToken,user.name);
+    await sendResetPasswordEmail(user.email, resetToken, user.name);
 
 
-   
+
     const [updateError, updatedUser] = await userRepository.findOneAndUpdate(
       { _id: user._id },
       {
@@ -138,16 +311,16 @@ export const forgotPassword = async (req, res) => {
       return res.status(500).json({ message: "Something went wrong" });
     }
 
-    
-    
-    res.json({ 
+
+
+    res.json({
       message: 'password. reset email sent',
-     
-      resetToken: resetToken 
+
+      resetToken: resetToken
     });
 
   } catch (err) {
-    res.status(500).json({ message:'error' });
+    res.status(500).json({ message: 'error' });
   }
 };
 
@@ -155,7 +328,7 @@ export const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
   try {
-  
+
     const [error, user] = await userRepository.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: new Date() }
@@ -167,7 +340,7 @@ export const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    
+
     const [updateError, updatedUser] = await userRepository.findOneAndUpdate(
       { _id: user._id },
       {
@@ -178,7 +351,7 @@ export const resetPassword = async (req, res) => {
     );
 
     if (updateError || !updatedUser) {
-      return res.status(500).json({ message: "something went wrong"});
+      return res.status(500).json({ message: "something went wrong" });
     }
 
     res.json({ message: "password reset successfully" });

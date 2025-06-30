@@ -13,9 +13,7 @@ const authMiddleware = async (req, res, next) => {
     
     // Fetch user and populate role dynamically from database
     const user = await User.findById(decoded.userId).populate('role', 'name');
-    
-    console.log("user with dynamic role:", user);
-    
+   
     if (!user) {
       return res.status(401).json({ message: 'User not found.' });
     }

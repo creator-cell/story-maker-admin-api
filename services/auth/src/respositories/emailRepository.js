@@ -2,7 +2,6 @@
 import nodemailer from 'nodemailer';
 import config from '../../config.js';
 import path from 'path';
-import fs from 'fs';
 
 const transport = nodemailer.createTransport(config.email.smtp);
 
@@ -24,6 +23,7 @@ transport.verify((error, success) => {
  * @returns {Promise}
  */
 export const sendEmail = async (to, subject, text, html = null) => {
+  console.log(to,subject,text,html);
   const msg = { 
     from: {
       name: config.email.fromName,
@@ -161,20 +161,7 @@ Story Maker Admin Team
       ${resetUrl}
     </div>
     
-    <div class="warning">
-      <strong>⚠️ Security Notice:</strong>
-      <ul>
-        <li>This link will expire in <strong>1 hour</strong></li>
-        <li>If you didn't request this password reset, please ignore this email</li>
-        <li>Never share this link with anyone</li>
-        <li>For security, this link can only be used once</li>
-      </ul>
-    </div>
-    
-    <div class="footer">
-      <p>This is an automated message, please do not reply to this email.</p>
-      <p>&copy; ${new Date().getFullYear()} Story Maker Admin. All rights reserved.</p>
-    </div>
+   
   </div>
 </body>
 </html>
@@ -187,6 +174,88 @@ Story Maker Admin Team
   }
 };
 
+export const sendVerificationEmail = async (email, name, verificationToken) => {
+  try {
+    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+    
+    const mailOptions = {
+      from: process.env.FROM_EMAIL,
+      to: email,
+      subject: 'Verify Your Email Address',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to Story Maker Admin!</h2>
+          <p>Hello ${name},</p>
+          <p>Thank you for creating an account with us. To complete your registration, please verify your email address by clicking the button below:</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Verify Email Address
+            </a>
+          </div>
+          
+          <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #007bff;">${verificationUrl}</p>
+          
+          <p><strong>Note:</strong> This verification link will expire in 24 hours.</p>
+          
+          <p>If you didn't create this account, please ignore this email.</p>
+          
+          <p>Best regards,<br>Story Maker Admin Team</p>
+        </div>
+      `
+    };
+
+    await sendEmail(mailOptions.to,mailOptions.subject,mailOptions.html);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    throw error;
+  }
+};
+
+
+
+export const sendLoginDetailsEmail = async (email, name, loginEmail, password) => {
+  try {
+   console.log("email",email);
+    const mailOptions = {
+    
+      to: email,
+    
+      subject: 'Your Account Login Details',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to Story Maker Admin!</h2>
+          <p>Hello ${name},</p>
+          <p>Your account has been created successfully. Here are your login details:</p>
+          
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Email:</strong> ${loginEmail}</p>
+            <p><strong>Password:</strong> ${password}</p>
+          </div>
+          
+          <p><strong>Important:</strong> Please change your password after your first login for security purposes.</p>
+          
+          <p>You can login at: <a href="${process.env.ADMIN_LOGIN_URL || '#'}">${process.env.ADMIN_LOGIN_URL || 'Admin Portal'}</a></p>
+          
+          <p>If you have any questions, please contact our support team.</p>
+          
+          <p>Best regards,<br>Story Maker Admin Team</p>
+        </div>
+      `
+    };
+
+   
+    await sendEmail(mailOptions.to,mailOptions.subject,mailOptions.html);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending login details email:', error);
+    throw error;
+  }
+};
 
 
 
