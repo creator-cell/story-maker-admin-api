@@ -12,12 +12,6 @@ export const createUser = async (req, res) => {
   const { name, email, role } = req.body;
   let { password } = req.body;
   
-  const roleName = role || 'user';
-  let userRole = await roleModel.findOne({ name: roleName });
-  if (!userRole) {
-    userRole = await roleModel.create({ name: roleName });
-  }
-  
   try {
     // Generate password if not provided
     let isPasswordGenerated = false;
@@ -32,7 +26,7 @@ export const createUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: userRole,
+      role: role,
       emailVerified: isPasswordGenerated, // Auto-verify if password was generated
     });
 
@@ -325,8 +319,9 @@ export const forgotPassword = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body;
-
+  const { newPassword,token } = req.body;
+ // const {token} = req.query;
+  console.log(token, newPassword)
   try {
 
     const [error, user] = await userRepository.findOne({
@@ -345,10 +340,11 @@ export const resetPassword = async (req, res) => {
       { _id: user._id },
       {
         password: hashedPassword,
-        resetPasswordToken: undefined,
-        resetPasswordExpires: undefined,
+        resetPasswordToken: '',
+        resetPasswordExpires: '',
       }
     );
+    console.log(updatedUser);
 
     if (updateError || !updatedUser) {
       return res.status(500).json({ message: "something went wrong" });

@@ -5,7 +5,7 @@ import {
   validateGetRoleById,
   validateDeleteRole
 } from '../../validators/role.validator.js';
-
+import checkPermission from '../../middlewares/middleware.js';
 import handleValidationErrors from '../../middlewares/handleValidationError.js';
 import {
   createRole,
@@ -20,10 +20,10 @@ import permit from '../../middlewares/validateRequest.js';
 
 const router = express.Router();
 
-router.post('/', auth, permit('Super Admin'), validateCreateRole, handleValidationErrors, createRole);
-router.get('/', auth, permit('Super Admin', 'Support', 'Moderator'), getAllRoles);
-router.get('/:id', auth, permit('Super Admin', 'Support', 'Moderator'), validateGetRoleById, handleValidationErrors, getRoleById);
-router.put('/:id', auth, permit('Super Admin'), validateUpdateRole, handleValidationErrors, updateRole);
-router.delete('/:id', auth, permit('Super Admin'), validateDeleteRole, handleValidationErrors, deleteRole);
+router.post('/', auth, checkPermission('write','Users'), validateCreateRole, handleValidationErrors, createRole);
+router.get('/', auth,  checkPermission('read','Users'), getAllRoles);
+router.get('/:id', auth,  checkPermission('read','Users'), validateGetRoleById, handleValidationErrors, getRoleById);
+router.put('/:id', auth, checkPermission('write','Users') , validateUpdateRole, handleValidationErrors, updateRole);
+router.delete('/:id', auth, checkPermission('write','Users'), validateDeleteRole, handleValidationErrors, deleteRole);
 
 export default router;

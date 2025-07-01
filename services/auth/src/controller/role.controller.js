@@ -14,7 +14,7 @@ export const createRole = async (req, res) => {
     }
 
     if (existingRole) {
-      return res.status(400).json({ message: 'Role already exists' });
+      return res.status(400).json({ message: 'Role aready exists' });
     }
 
    
