@@ -169,44 +169,47 @@ export const resendVerificationEmail = async (email) => {
 };
 
 
-// Login
-export const login = async (req, res) => {
-  console.log("req body", req.body);
-  const { email, password } = req.body;
- 
-  try {
-    const [error, user] = await userRepository.findOne({email});
-   
-    if (error || !user) {
-      return res.status(400).json({ message: "Wrong email" });
-    }
 
-    // Check if email is verified (skip for auto-generated passwords)
+
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const [error, user] = await userRepository.findOne({ email });
+    if (error || !user) return res.status(400).json({ message: "Wrong email" });
+
     if (!user.emailVerified) {
-      await resendVerificationEmail(req.body.email)
-      return res.status(400).json({ 
-        message: "Please verify your email before logging in",
-        emailVerificationRequired: true 
+      await resendVerificationEmail(email);
+      return res.status(400).json({
+        message: "Please verify your email",
+        emailVerificationRequired: true
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Wrong credentials" });
-    }
+    if (!isMatch) return res.status(400).json({ message: "Wrong credentials" });
 
     await user.populate('role');
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1d',
+      expiresIn: '1d'
     });
 
-    res.json({ message: "Login success", token, user });
+    // 👉 Set JWT in HTTP-only cookie
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.json({ message: "Login success" ,user});
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 
 
