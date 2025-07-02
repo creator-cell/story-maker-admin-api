@@ -211,18 +211,53 @@ export const login = async (req, res) => {
 };
 
 
-export const getAllUser = async (req, res) => {
-   try {
-    const [error, user] = await userRepository.getManyWithPagination();
-    if (error || !user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+// export const getAllUser = async (req, res) => {
+//    try {
+//     const [error, user] = await userRepository.getManyWithPagination();
+//     if (error || !user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
 
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ message: "something went wrong" });
+//     res.json({ user });
+//   } catch (err) {
+//     res.status(500).json({ message: "something went wrong" });
+//   }
+// }
+
+export const getAllUser = async (req, res) => {
+  const { 
+    page = 1, 
+    pageSize = 10, 
+    search, 
+    name, 
+    email, 
+    phoneNumber,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = req.query;
+
+  const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+  
+  const filters = {};
+  if (name) filters.name = name;
+  if (email) filters.email = email;
+  if (phoneNumber) filters.phoneNumber = phoneNumber;
+
+  const result = await userRepository.getManyWithPagination({}, {
+    page: parseInt(page),
+    pageSize: parseInt(pageSize),
+    search,
+    filters,
+    sort
+  });
+
+  if (result.error) {
+    return res.status(500).json({ message: 'Error fetching users', error: result.error });
   }
-}
+
+  res.json(result.data);
+};
+
 
 // Get user by ID
 export const getUserById = async (req, res) => {
