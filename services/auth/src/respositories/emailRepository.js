@@ -23,18 +23,18 @@ transport.verify((error, success) => {
  * @returns {Promise}
  */
 export const sendEmail = async (to, subject, text, html = null) => {
-  console.log(to,subject,text,html);
-  const msg = { 
+  console.log(to, subject, text, html);
+  const msg = {
     from: {
       name: config.email.fromName,
       address: config.email.from
-    }, 
-    to, 
-    subject, 
+    },
+    to,
+    subject,
     text,
-    html: html || text 
+    html: html || text
   };
-  
+
   try {
     const result = await transport.sendMail(msg);
     console.log('Email sent successfully:', result.messageId);
@@ -54,9 +54,9 @@ export const sendEmail = async (to, subject, text, html = null) => {
  */
 export const sendResetPasswordEmail = async (to, token, userName = 'User') => {
   const resetUrl = `${config.app.frontendUrl}/reset-password?token=${token}`;
-  
+
   const subject = 'Reset Your Password - Story Maker Admin';
-  
+
   const textContent = `
 Hello ${userName},
 
@@ -177,7 +177,7 @@ Story Maker Admin Team
 export const sendVerificationEmail = async (email, name, verificationToken) => {
   try {
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-    
+
     const mailOptions = {
       from: process.env.FROM_EMAIL,
       to: email,
@@ -207,7 +207,7 @@ export const sendVerificationEmail = async (email, name, verificationToken) => {
       `
     };
 
-    await sendEmail(mailOptions.to,mailOptions.subject,mailOptions.html);
+    await sendEmail(mailOptions.to, mailOptions.subject, mailOptions.html);
     return { success: true };
   } catch (error) {
     console.error('Error sending verification email:', error);
@@ -219,11 +219,11 @@ export const sendVerificationEmail = async (email, name, verificationToken) => {
 
 export const sendLoginDetailsEmail = async (email, name, loginEmail, password) => {
   try {
-   console.log("email",email);
+    console.log("email", email);
     const mailOptions = {
-    
+
       to: email,
-    
+
       subject: 'Your Account Login Details',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -247,9 +247,9 @@ export const sendLoginDetailsEmail = async (email, name, loginEmail, password) =
       `
     };
 
-   
-    await sendEmail(mailOptions.to,mailOptions.subject,mailOptions.html);
-    
+
+    await sendEmail(mailOptions.to, mailOptions.subject, mailOptions.html);
+
     return { success: true };
   } catch (error) {
     console.error('Error sending login details email:', error);

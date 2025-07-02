@@ -83,7 +83,7 @@ export const verifyEmail = async (req, res) => {
   const { token } = req.query;
 
   try {
-    // Verify JWT token
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     
@@ -97,12 +97,10 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Check if email matches
     if (user.email !== decoded.email) {
       return res.status(400).json({ message: "Invalid verification token" });
     }
 
-    // Check if already verified
     if (user.emailVerified) {
       return res.status(400).json({ message: "Email is already verified" });
     }
@@ -144,7 +142,7 @@ export const resendVerificationEmail = async (email) => {
       return({ message: "Email is already verified" });
     }
 
-    // Generate new JWT verification token
+   
     const verificationToken = jwt.sign(
       { 
         userId: user._id,
@@ -211,18 +209,7 @@ export const login = async (req, res) => {
 };
 
 
-// export const getAllUser = async (req, res) => {
-//    try {
-//     const [error, user] = await userRepository.getManyWithPagination();
-//     if (error || !user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
 
-//     res.json({ user });
-//   } catch (err) {
-//     res.status(500).json({ message: "something went wrong" });
-//   }
-// }
 
 export const getAllUser = async (req, res) => {
   const { 
@@ -268,7 +255,7 @@ export const getUserById = async (req, res) => {
     if (error || !user) {
       return res.status(404).json({ message: "User not found" });
     }
-
+    await user.populate('role');
     res.json({ user });
   } catch (err) {
     res.status(500).json({ message: "something went wrong" });
