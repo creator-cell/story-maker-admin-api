@@ -19,9 +19,7 @@ const checkPermission = (action, menuItems = null) => {
         });
       }
 
-      console.log('Permission Debug - Checking action:', action);
-      console.log('Permission Debug - Role menu permissions:', role.menu);
-
+    
       // Check menu access first if menuItems are specified
       if (menuItems) {
         const menuArray = Array.isArray(menuItems) ? menuItems : [menuItems];
@@ -154,14 +152,7 @@ const checkPermission = (action, menuItems = null) => {
         }
       };
       
-      console.log('Permission Debug - Access granted for:', {
-        action,
-        menuItems,
-        roleMenus: role.menu.map(m => ({
-          menuName: m.menuName,
-          permissions: { read: m.read, write: m.write, both: m.both }
-        }))
-      });
+  
 
       next();
     } catch (error) {

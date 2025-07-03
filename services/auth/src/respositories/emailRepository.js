@@ -23,7 +23,7 @@ transport.verify((error, success) => {
  * @returns {Promise}
  */
 export const sendEmail = async (to, subject, text, html = null) => {
-  console.log(to, subject, text, html);
+
   const msg = {
     from: {
       name: config.email.fromName,
@@ -219,7 +219,7 @@ export const sendVerificationEmail = async (email, name, verificationToken) => {
 
 export const sendLoginDetailsEmail = async (email, name, loginEmail, password) => {
   try {
-    console.log("email", email);
+   
     const mailOptions = {
 
       to: email,

@@ -16,10 +16,10 @@ export const createRole = async (req, res) => {
 
     // Check if role already exists
     const [findError, existingRole] = await roleRepository.findByName(name);
-    console.log(existingRole, findError);
+  
     
     if (findError) {
-      console.log(findError);
+   
       return res.status(500).json({ message: 'Something went wrong' });
     }
 
@@ -40,10 +40,10 @@ export const createRole = async (req, res) => {
       menu
     });
 
-    console.log('Creating role with:', { name, menu });
+  
 
     if (error) {
-      console.log('Role creation error:', error);
+    
       return res.status(500).json({ message: 'Something went wrong' });
     }
 

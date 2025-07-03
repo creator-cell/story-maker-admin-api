@@ -347,7 +347,7 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   const { newPassword,token } = req.body;
  // const {token} = req.query;
-  console.log(token, newPassword)
+
   try {
 
     const [error, user] = await userRepository.findOne({
@@ -370,8 +370,7 @@ export const resetPassword = async (req, res) => {
         resetPasswordExpires: '',
       }
     );
-    console.log(updatedUser);
-
+   
     if (updateError || !updatedUser) {
       return res.status(500).json({ message: "something went wrong" });
     }
