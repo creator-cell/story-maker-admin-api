@@ -28,10 +28,13 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/', routes);
-routes.get('/me', authMiddleware, (req, res) => {
+
+// Fix: Use app.get instead of routes.get
+app.get('/me', authMiddleware, (req, res) => {
   const { userId, role, rolePermissions } = req.user;
   res.json({ userId, role, rolePermissions });
 });
+
 // DB Connection
 connectDB();
 
@@ -40,6 +43,5 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something broke!' });
 });
-
 
 export default app;

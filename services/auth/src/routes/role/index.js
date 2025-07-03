@@ -20,10 +20,10 @@ import permit from '../../middlewares/validateRequest.js';
 
 const router = express.Router();
 
-router.post('/', auth, checkPermission('write','Roles'), validateCreateRole, handleValidationErrors, createRole);
-router.get('/', auth,  checkPermission('read','Roles'), getAllRoles);
-router.get('/:id', auth,  checkPermission('read','Roles'), validateGetRoleById, handleValidationErrors, getRoleById);
-router.put('/:id', auth, checkPermission('write','Roles') , validateUpdateRole, handleValidationErrors, updateRole);
-router.delete('/:id', auth, checkPermission('write','Roles'), validateDeleteRole, handleValidationErrors, deleteRole);
+router.post('/', auth, validateCreateRole, handleValidationErrors, createRole);
+router.get('/', auth,   getAllRoles);
+router.get('/:id', auth,   validateGetRoleById, handleValidationErrors, getRoleById);
+router.put('/:id', auth,  validateUpdateRole, handleValidationErrors, updateRole);
+router.delete('/:id', auth, validateDeleteRole, handleValidationErrors, deleteRole);
 
 export default router;
