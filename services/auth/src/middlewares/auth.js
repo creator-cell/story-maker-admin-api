@@ -3,6 +3,7 @@ import Role from "../models/role.model.js"; // Make sure to import Role model
 import jwt from 'jsonwebtoken';
 
 const authMiddleware = async (req, res, next) => {
+  
   const token = req.header('Authorization')?.replace('Bearer ', '');
   
   if (!token) {
@@ -11,8 +12,7 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Fetch user and populate role with full role document
+   
     const user = await User.findById(decoded.userId).populate('role');
    
     if (!user) {

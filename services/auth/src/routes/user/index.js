@@ -35,10 +35,10 @@ router.post('/reset-password', validateResetPassword, handleValidationErrors, re
 router.post('/verify-email', verifyEmail);
 
 
-router.get('/',auth,  handleValidationErrors, getAllUser);
-router.post('/',auth,  validateCreateUser, handleValidationErrors, createUser);
-router.put('/:id', auth,  validateUpdateUser, handleValidationErrors, updateUser);
-router.get('/:id', auth, validateGetUserById, handleValidationErrors, getUserById);
-router.delete('/:id', auth, validateDeleteUser, handleValidationErrors, deleteUser);
+router.get('/',auth, checkPermission("read","Users"),  handleValidationErrors, getAllUser);
+router.post('/',auth, checkPermission("write","Users"), validateCreateUser, handleValidationErrors, createUser);
+router.put('/:id', auth, checkPermission("write","Users"), validateUpdateUser, handleValidationErrors, updateUser);
+router.get('/:id', auth, checkPermission("read","Users"), validateGetUserById, handleValidationErrors, getUserById);
+router.delete('/:id', auth, checkPermission("write","Users"), validateDeleteUser, handleValidationErrors, deleteUser);
 
 export default router;

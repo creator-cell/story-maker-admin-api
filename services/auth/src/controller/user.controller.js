@@ -176,7 +176,8 @@ export const login = async (req, res) => {
 
   try {
     const [error, user] = await userRepository.findOne({ email });
-    if (error || !user) return res.status(400).json({ message: "Wrong email" });
+    console.log(error,user);
+    if (error || !user) return res.status(400).json({ message: "User not found" });
 
     if (!user.emailVerified) {
       await resendVerificationEmail(email);

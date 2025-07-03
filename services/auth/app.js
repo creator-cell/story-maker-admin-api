@@ -29,7 +29,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 // Routes
 app.use('/', routes);
 
-// Fix: Use app.get instead of routes.get
+
 app.get('/me', authMiddleware, (req, res) => {
   const { userId, role, rolePermissions } = req.user;
   res.json({ userId, role, rolePermissions });
