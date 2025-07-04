@@ -37,6 +37,11 @@ export const validateUpdateUser = [
     .isEmail()
     .withMessage((value, { req }) => req.t('validation.email_invalid')),
 
+     body('phone')
+    .optional()
+    .notEmpty()
+    .withMessage((value, { req }) => req.t('phone number required')),
+
   body('password')
     .optional()
     .isLength({ min: 6 })

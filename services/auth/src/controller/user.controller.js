@@ -7,9 +7,9 @@ import { sendResetPasswordEmail,sendLoginDetailsEmail,sendVerificationEmail } fr
 import roleModel from '../models/role.model.js';
 
 
-// Create User
+
 export const createUser = async (req, res) => {
-  const { name, email, role } = req.body;
+  const { name, email, role, phone } = req.body;
   let { password } = req.body;
   
   try {
@@ -26,8 +26,9 @@ export const createUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role,
+      role: role?role:"686627e931d307ca807aba18",
       emailVerified: isPasswordGenerated, // Auto-verify if password was generated
+      phone:phone,
     });
 
     if (error) {
@@ -78,7 +79,7 @@ export const createUser = async (req, res) => {
   }
 };
 
-// Email verification endpoint
+
 export const verifyEmail = async (req, res) => {
   const { token } = req.query;
 
@@ -270,7 +271,7 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
-
+console.log("updateData",updateData);
   try {
     const [error, user] = await userRepository.findOneAndUpdate({ _id: id }, updateData);
     if (error || !user) {

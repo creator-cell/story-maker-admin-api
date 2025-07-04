@@ -15,6 +15,7 @@ export const validateUpdateRole = [
     .withMessage('Invalid role ID'),
 
   body('name')
+  .optional()
     .notEmpty()
     .withMessage('Role name is required')
     .isLength({ min: 2, max: 50 })
