@@ -23,13 +23,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'User role not assigned.' });
     }
 
-    // Add debug logging
-    console.log('Auth Debug - User:', {
-      userId: user._id,
-      email: user.email,
-      roleId: user.role._id,
-      roleName: user.role.name
-    });
+   
     
     req.user = {
       userId: decoded.userId,

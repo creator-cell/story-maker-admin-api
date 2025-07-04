@@ -13,10 +13,10 @@ export const createUser = async (req, res) => {
   let { password } = req.body;
   
   try {
-    // Generate password if not provided
+
     let isPasswordGenerated = false;
     if (!password) {
-      password = crypto.randomBytes(8).toString('hex'); // Generate 16 character password
+      password = crypto.randomBytes(8).toString('hex'); 
       isPasswordGenerated = true;
     }
 
