@@ -14,7 +14,7 @@ const {
   getManyWithPagination
 } = createBaseRepository(Role);
 
-// Custom methods for Role
+
 const findByName = async (name) => findOne({ name });
 
 const roleRepository = {

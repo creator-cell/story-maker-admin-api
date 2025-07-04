@@ -1,10 +1,9 @@
 import userRepository from '../respositories/userRepository.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import i18n from '../i18n/index.js';
+
 import crypto from 'crypto';
 import { sendResetPasswordEmail,sendLoginDetailsEmail,sendVerificationEmail } from '../respositories/emailRepository.js';
-import roleModel from '../models/role.model.js';
 
 
 
