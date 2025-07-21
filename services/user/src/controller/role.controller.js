@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import roleRepository from '../respositories/roleRepository.js';
 
 // Create Role
@@ -62,6 +63,11 @@ export const getAllRoles = async (req, res) => {
   try {
     const { page, pageSize, sortBy = 'createdAt', sortOrder = 'desc', search, menuName } = req.query;
 
+    let baseFilter = {};
+    if (!req.user.isSuperAdmin) {
+      baseFilter = { isSuperAdmin : false, _id : { $ne: new mongoose.Types.ObjectId(req?.user?.roleId) } }
+    }
+
     // Use pagination if page and pageSize are provided
     if (page || pageSize) {
       const options = {
@@ -73,7 +79,7 @@ export const getAllRoles = async (req, res) => {
         menuName
       };
 
-      const [error, result] = await roleRepository.getRolesWithPagination(options);
+      const [error, result] = await roleRepository.getManyWithPagination(baseFilter,options);
 
       if (error) {
         return res.status(500).json({ message: 'Something went wrong' });
@@ -100,8 +106,8 @@ export const getAllRoles = async (req, res) => {
       });
     } else {
       // Get all roles without pagination
-      const [error, roles] = await roleRepository.findMany();
-
+      const [error, roles] = await roleRepository.findMany(baseFilter);
+      console.log(baseFilter);
       if (error) {
         return res.status(500).json({ message: 'Something went wrong' });
       }
@@ -255,6 +261,10 @@ export const deleteRole = async (req, res) => {
 
     if (!existingRole) {
       return res.status(404).json({ message: 'Role not found' });
+    }
+
+    if (existingRole?.isSuperAdmin) {
+      return res.status(400).json({ message: "Invalid request." });
     }
 
     // Delete role

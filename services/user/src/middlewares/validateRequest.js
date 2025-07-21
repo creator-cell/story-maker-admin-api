@@ -1,3 +1,4 @@
+
 export const validateRequest = ({ body, params, query }) => (req, res, next) => {
   const { t } = req;
 
@@ -25,3 +26,17 @@ export const validateRequest = ({ body, params, query }) => (req, res, next) => 
 
   next();
 };
+
+const permit = (...allowedRoles) => {
+  return (req, res, next) => {
+    const { role } = req.user;
+   
+    if (allowedRoles.includes(role)) {
+      next();
+    } else {
+      return res.status(403).json({ message: 'Forbidden: Access denied' });
+    }
+  };
+};
+
+export default permit;

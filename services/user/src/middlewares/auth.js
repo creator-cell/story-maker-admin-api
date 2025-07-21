@@ -1,16 +1,49 @@
-export const authMiddleware = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+import User from "../models/user.model.js";
+import Role from "../models/role.model.js"; // Make sure to import Role model
+import jwt from 'jsonwebtoken';
+
+const authMiddleware = async (req, res, next) => {
   
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized' });
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+   
+    const user = await User.findById(decoded.userId).populate('role');
+   
+    if (!user) {
+      return res.status(401).json({ message: 'User not found.' });
     }
-  
-    try {
-      // TODO: verify token with JWT or other logic
-      req.user = { id: '123', name: 'Test User' }; // mock
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: 'Invalid token' });
+
+    if (!user.role) {
+      return res.status(401).json({ message: 'User role not assigned.' });
     }
-  };
-  
+
+   
+    
+    req.user = {
+      userId: decoded.userId,
+      role: user.role.name,
+      roleId: user.role._id,
+      isSuperAdmin: user?.role?.isSuperAdmin,
+      rolePermissions: {
+        read: user.role.read,
+        write: user.role.write,
+        both: user.role.both,
+        menu: user.role.menu
+      },
+      ...decoded
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    res.status(400).json({ message: 'Invalid token.' });
+  }
+};
+
+export default authMiddleware;

@@ -1,3 +1,4 @@
+import '../models/role.model.js';
 import userRepository from '../respositories/userRepository.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -25,7 +26,7 @@ export const createUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role?role:"686627e931d307ca807aba18",
+      role: role ? role : "686627e931d307ca807aba18",
       emailVerified: isPasswordGenerated, // Auto-verify if password was generated
       phone:phone,
     });
@@ -179,6 +180,10 @@ export const login = async (req, res) => {
     console.log(error,user);
     if (error || !user) return res.status(400).json({ message: "User not found" });
 
+    if (!user.isActive) {
+      return res.status(400).json({message: "Account deactivated. Contact support for help."});
+    }
+
     if (!user.emailVerified) {
       await resendVerificationEmail(email);
       return res.status(400).json({
@@ -207,94 +212,6 @@ export const login = async (req, res) => {
     res.json({ message: "Login success" ,user,token});
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ message: "Something went wrong" });
-  }
-};
-
-
-
-
-
-export const getAllUser = async (req, res) => {
-  const { 
-    page = 1, 
-    pageSize = 10, 
-    search, 
-    name, 
-    email, 
-    phoneNumber,
-    sortBy = 'createdAt',
-    sortOrder = 'desc'
-  } = req.query;
-
-  const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
-  
-  const filters = {};
-  if (name) filters.name = name;
-  if (email) filters.email = email;
-  if (phoneNumber) filters.phoneNumber = phoneNumber;
-
-  const result = await userRepository.getManyWithPagination({}, {
-    page: parseInt(page),
-    pageSize: parseInt(pageSize),
-    search,
-    filters,
-    sort
-  });
-
-  if (result.error) {
-    return res.status(500).json({ message: 'Error fetching users', error: result.error });
-  }
-
-  res.json(result.data);
-};
-
-
-// Get user by ID
-export const getUserById = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const [error, user] = await userRepository.findOneById(id, { password: 0 });
-    if (error || !user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    await user.populate('role');
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ message: "something went wrong" });
-  }
-};
-
-// Update user
-export const updateUser = async (req, res) => {
-  const { id } = req.params;
-  const updateData = req.body;
-console.log("updateData",updateData);
-  try {
-    const [error, user] = await userRepository.findOneAndUpdate({ _id: id }, updateData);
-    if (error || !user) {
-      return res.status(400).json({ message: "user update_failed" });
-    }
-
-    res.json({ message: "user updated", user });
-  } catch (err) {
-    res.status(500).json({ message: "Something went wrong" });
-  }
-};
-
-// Delete user
-export const deleteUser = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const [ error,result] = await userRepository.deleteOne({ _id: id });
-    if (error || result.deletedCount === 0) {
-      return res.status(400).json({ message: "failed to delete user" });
-    }
-
-    res.json({ message: "user deleted" });
-  } catch (err) {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -381,4 +298,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: err });
   }
 };
-
