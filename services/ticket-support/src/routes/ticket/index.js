@@ -13,6 +13,9 @@ import {
   getTicketById,
   updateTicket,
   deleteTicket,
+  getAllModerator,
+  getModeratorTicket,
+  getUserTicket,
 } from "../../controller/ticket.controller.js";
 
 import auth from "../../middlewares/auth.js"; // JWT middleware
@@ -23,22 +26,45 @@ const router = express.Router();
 router.get(
   "/",
   auth,
-  checkPermission("read", "Users"),
+  checkPermission("read", "Tickets"),
   handleValidationErrors,
   getAllTicket
 );
 router.post(
   "/",
   auth,
-  checkPermission("write", "Users"),
+  checkPermission("write", "Tickets"),
   validateCreateTicket,
   handleValidationErrors,
   createTicket
 );
+router.get(
+  "/moderator",
+  auth,
+  checkPermission("read", "Tickets"),
+  handleValidationErrors,
+  getAllModerator
+);
+router.get(
+  "/moderator/:id",
+  auth,
+  checkPermission("read", "Tickets"),
+  validateUpdateTicket,
+  handleValidationErrors,
+  getModeratorTicket
+);
+router.get(
+  "/user/:id",
+  auth,
+  checkPermission("read", "Tickets"),
+  validateUpdateTicket,
+  handleValidationErrors,
+  getUserTicket
+);
 router.put(
   "/:id",
   auth,
-  checkPermission("write", "Users"),
+  checkPermission("write", "Tickets"),
   validateUpdateTicket,
   handleValidationErrors,
   updateTicket
@@ -46,7 +72,7 @@ router.put(
 router.get(
   "/:id",
   auth,
-  checkPermission("read", "Users"),
+  checkPermission("read", "Tickets"),
   validateGetTicketById,
   handleValidationErrors,
   getTicketById
@@ -54,7 +80,7 @@ router.get(
 router.delete(
   "/:id",
   auth,
-  checkPermission("write", "Users"),
+  checkPermission("write", "Tickets"),
   validateDeleteTicket,
   handleValidationErrors,
   deleteTicket

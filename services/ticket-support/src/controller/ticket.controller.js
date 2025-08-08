@@ -1,5 +1,5 @@
 import ticketRepository from "../respositories/ticketRepository.js";
-
+import Ticket from "../models/ticket.model.js";
 // Create Role
 export const createTicket = async (req, res) => {
   try {
@@ -21,37 +21,73 @@ export const createTicket = async (req, res) => {
 };
 
 export const getAllTicket = async (req, res) => {
-  const {
-    page = 1,
-    pageSize = 10,
-    search,
+  try {
+    const {
+      page = 1,
+      pageSize = 10,
+      search,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      user,
 
-    sortBy = "createdAt",
-    sortOrder = "desc",
-  } = req.query;
+      role,
+    } = req.query;
 
-  const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-  const filters = {};
+    const filters = {};
+    console.log("user", user);
+    if (role === "User") {
+      filters.userId = user;
+    } else if (role === "Moderator") {
+      console.log("comes in this");
+      filters.moderator = user;
+    }
 
-  const result = await ticketRepository.getManyWithPagination(
-    {},
-    {
+    if (search) {
+      filters.$or = [
+        { message: { $regex: search, $options: "i" } },
+        { status: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+    const tickets = await Ticket.find(filters)
+      .populate("userId")
+      .populate("moderator")
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(pageSize));
+    console.log("tickets", tickets);
+    const totalCount = await Ticket.countDocuments(filters);
+
+    res.json({
+      data: tickets,
+      total: totalCount,
       page: parseInt(page),
       pageSize: parseInt(pageSize),
-      search,
-      filters,
-      sort,
-    }
-  );
-
-  if (result.error) {
-    return res
-      .status(500)
-      .json({ message: "Error fetching users", error: result.error });
+      totalPages: Math.ceil(totalCount / parseInt(pageSize)),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching tickets", error });
   }
+};
 
-  res.json(result.data);
+export const getAllModerator = async (req, res) => {
+  const moderator = await ticketRepository.getAllModerator();
+  res.send(moderator);
+};
+
+export const getModeratorTicket = async (req, res) => {
+  const allModerator = await ticketRepository.getModeratorTicket(req.params.id);
+  res.send(allModerator);
+};
+
+export const getUserTicket = async (req, res) => {
+  const allModerator = await ticketRepository.getUserTicket(req.params.id);
+  res.send(allModerator);
 };
 
 export const getTicketById = async (req, res) => {
@@ -68,21 +104,46 @@ export const getTicketById = async (req, res) => {
   }
 };
 
+// export const updateTicket = async (req, res) => {
+//   const { id } = req.params;
+//   const updateData = req.body;
+
+//   try {
+//     const [error, user] = await ticketRepository.findOneAndUpdate(
+//       { _id: id },
+//       updateData
+//     );
+//     if (error || !user) {
+//       return res.status(400).json({ message: "ticket update_failed" });
+//     }
+
+//     res.json({ message: "ticket updated", user });
+//   } catch (err) {
+//     res.status(500).json({ message: "Something went wrong" });
+//   }
+// };
+
 export const updateTicket = async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body;
+  const { messages, ...otherUpdates } = req.body;
 
   try {
-    const [error, user] = await ticketRepository.findOneAndUpdate(
+    const updatedTicket = await ticketRepository.findOneAndUpdate(
       { _id: id },
-      updateData
+      {
+        ...otherUpdates,
+        ...(messages && { $push: { messages: { $each: messages } } }),
+      },
+      { new: true }
     );
-    if (error || !user) {
+
+    if (!updatedTicket) {
       return res.status(400).json({ message: "ticket update_failed" });
     }
 
-    res.json({ message: "ticket updated", user });
+    res.json({ message: "ticket updated", ticket: updatedTicket });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
