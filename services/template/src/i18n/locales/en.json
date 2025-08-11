@@ -1,0 +1,26 @@
+{
+  "user": {
+    "created": "User created successfully.",
+    "updated": "User updated.",
+    "deleted": "User deleted.",
+    "not_found": "User not found.",
+    "update_failed": "Failed to update user.",
+    "delete_failed": "Failed to delete user."
+  },
+  "auth": {
+    "login_success": "Login successful.",
+    "invalid_credentials": "Invalid email or password."
+  },
+  "error": {
+    "generic": "Something went wrong. Please try again later."
+  },
+  "validation": {
+    "name_required": "Name is required.",
+    "email_required": "Email is required.",
+    "email_invalid": "Invalid email address.",
+    "phone_required": "A valid phone number is required.",
+    "password_required": "Password must be at least 6 characters.",
+    "password_missing": "Password is required.",
+    "user_id_invalid": "Invalid user ID."
+  }
+}
