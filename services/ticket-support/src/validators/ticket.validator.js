@@ -16,7 +16,7 @@ export const validateCreateTicket = [
     .notEmpty()
     .withMessage("Role is required")
     .bail()
-    .isIn(["User", "Moderator"])
+    .isIn(["user", "moderator"])
     .withMessage('Role must be either "user" or "moderator"'),
 
   body("messages.*.message")
@@ -80,7 +80,7 @@ export const validateUpdateTicket = [
 
   body("messages.*.role")
     .optional()
-    .isIn(["User", "Moderator"])
+    .isIn(["user", "moderator"])
     .withMessage('Role must be either "user" or "moderator"'),
 
   body("messages.*.message")

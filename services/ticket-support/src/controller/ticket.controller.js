@@ -29,38 +29,38 @@ export const getAllTicket = async (req, res) => {
       sortBy = "createdAt",
       sortOrder = "desc",
       user,
-
       role,
     } = req.query;
 
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
     const filters = {};
-    console.log("user", user);
-    if (role === "User") {
+    if (role === "user") {
       filters.userId = user;
-    } else if (role === "Moderator") {
-      console.log("comes in this");
+    } else if (role === "moderator") {
       filters.moderator = user;
-    }
-
-    if (search) {
-      filters.$or = [
-        { message: { $regex: search, $options: "i" } },
-        { status: { $regex: search, $options: "i" } },
-      ];
     }
 
     const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
-    const tickets = await Ticket.find(filters)
+    let tickets = await Ticket.find(filters)
       .populate("userId")
       .populate("moderator")
       .sort(sort)
       .skip(skip)
       .limit(parseInt(pageSize));
-    console.log("tickets", tickets);
-    const totalCount = await Ticket.countDocuments(filters);
+
+    if (search) {
+      const regex = new RegExp(search, "i");
+      tickets = tickets.filter(
+        (t) =>
+          regex.test(t.message || "") ||
+          regex.test(t.status || "") ||
+          regex.test(t.userId?.name || "")
+      );
+    }
+
+    const totalCount = tickets.length;
 
     res.json({
       data: tickets,
