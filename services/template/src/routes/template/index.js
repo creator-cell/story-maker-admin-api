@@ -4,15 +4,15 @@ import {
   validateUpdateTemplate,
   validateGetTemplateById,
   validateDeleteTemplate,
-} from "../../validators/Template.validator.js";
+} from "../../validators/template.validator.js";
 
 import handleValidationErrors from "../../middlewares/handleValidationError.js";
 import {
   createTemplate,
-  updateTemplate,
-  deleteTemplate,
   getAllTemplate,
   getTemplateById,
+  updateTemplate,
+  deleteTemplate,
 } from "../../controller/template.controller.js";
 
 import auth from "../../middlewares/auth.js"; // JWT middleware
