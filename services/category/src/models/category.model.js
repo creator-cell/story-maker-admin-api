@@ -11,8 +11,10 @@ const categorySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-
-
+    slug: {
+      type: String,
+      trim: true,
+    },
     assets: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -22,42 +24,15 @@ const categorySchema = new mongoose.Schema(
     templates: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Template", 
+        ref: "Template",
       },
     ],
 
-  
-    subCategories: [
-      {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        description: {
-          type: String,
-          trim: true,
-        },
-        assets: [
-          {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Asset",
-          },
-        ],
-        templates: [
-          {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Template",
-          },
-        ],
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-
-   
+    parentCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
   },
   {
     timestamps: true,

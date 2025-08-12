@@ -2,7 +2,8 @@ import categoryRepository from "../respositories/categoryRepository.js";
 
 // Create Category
 export const createCategory = async (req, res) => {
-  const { name, description, subCategories, assets, templates } = req.body;
+  const { name, description, parentCategory, assets, templates, slug } =
+    req.body;
 
   try {
     const [findError, existingCategory] = await categoryRepository.findByName(
@@ -18,12 +19,14 @@ export const createCategory = async (req, res) => {
     const [error, category] = await categoryRepository.insertOne({
       name,
       description,
-      subCategories: subCategories || [],
+      parentCategory: parentCategory,
+      slug: slug,
       assets: assets || [],
       templates: templates || [],
     });
 
     if (error) {
+      console.log("error", error);
       return res.status(500).json({ message: "Something went wrong" });
     }
 
@@ -111,7 +114,8 @@ export const getCategoryById = async (req, res) => {
 // Update Category
 export const updateCategory = async (req, res) => {
   const { id } = req.params;
-  const { name, description, subCategories, assets, templates } = req.body;
+  const { name, description, parentCategory, assets, templates, slug } =
+    req.body;
 
   try {
     const [findError, existingCategory] = await categoryRepository.findOneById(
@@ -126,8 +130,10 @@ export const updateCategory = async (req, res) => {
 
     const updateData = {};
     if (name) updateData.name = name;
+
+    if (slug) updateData.slug = slug;
     if (description) updateData.description = description;
-    if (subCategories) updateData.subCategories = subCategories;
+    if (parentCategory) updateData.parentCategory = parentCategory;
     if (assets) updateData.assets = assets;
     if (templates) updateData.templates = templates;
 
