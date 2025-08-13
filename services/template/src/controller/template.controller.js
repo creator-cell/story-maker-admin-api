@@ -98,7 +98,7 @@ export const getTemplateById = async (req, res) => {
 export const updateTemplate = async (req, res) => {
   const { id } = req.params;
   const { name, content, status, category, subCategory } = req.body;
-
+  console.log("status", status);
   try {
     const [findError, existingtemplate] = await templateRepository.findOneById(
       id
@@ -157,6 +157,36 @@ export const deleteTemplate = async (req, res) => {
     }
 
     res.json({ message: "template deleted successfully" });
+  } catch (err) {
+    console.error("Delete template error:", err);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+//clone template
+export const cloneTemplate = async (req, res) => {
+  const { id } = req.body;
+  try {
+    const [findError, existingtemplate] = await templateRepository.findOneById(
+      id
+    );
+    if (findError) {
+      return res.status(500).json({ message: "Something went wrong" });
+    }
+    if (!existingtemplate) {
+      return res.status(404).json({ message: "template not found" });
+    }
+
+    const [error, result] = await templateRepository.cloneTemplate(id);
+    console.log("result", result);
+    if (error) {
+      res.json({ message: error });
+      return;
+    }
+    if (result) {
+      res.json({ message: "template clone successfully" });
+      return;
+    }
   } catch (err) {
     console.error("Delete template error:", err);
     res.status(500).json({ message: "Something went wrong" });
