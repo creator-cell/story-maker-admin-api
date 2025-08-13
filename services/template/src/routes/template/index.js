@@ -4,15 +4,17 @@ import {
   validateUpdateTemplate,
   validateGetTemplateById,
   validateDeleteTemplate,
-} from "../../validators/Template.validator.js";
+  validateCloneTemplate,
+} from "../../validators/template.validator.js";
 
 import handleValidationErrors from "../../middlewares/handleValidationError.js";
 import {
   createTemplate,
-  updateTemplate,
-  deleteTemplate,
   getAllTemplate,
   getTemplateById,
+  updateTemplate,
+  deleteTemplate,
+  cloneTemplate,
 } from "../../controller/template.controller.js";
 
 import auth from "../../middlewares/auth.js"; // JWT middleware
@@ -44,6 +46,16 @@ router.put(
   handleValidationErrors,
   updateTemplate
 );
+
+router.post(
+  "/:id",
+  auth,
+  checkPermission("write", "Template"),
+  validateCloneTemplate,
+  handleValidationErrors,
+  cloneTemplate
+);
+
 router.get(
   "/:id",
   auth,

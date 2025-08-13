@@ -1,13 +1,16 @@
 import templateRepository from "../respositories/templateRepository.js";
-
+import Template from "../models/template.model.js";
 // Create template
 export const createTemplate = async (req, res) => {
-  const { name, content } = req.body;
+  const { name, content, category, status, subCategory } = req.body;
 
   try {
     const [error, template] = await templateRepository.insertOne({
       name,
       content,
+      category,
+      status,
+      subCategory,
     });
 
     if (error) {
@@ -24,55 +27,49 @@ export const createTemplate = async (req, res) => {
   }
 };
 
-// Get all Categories (with pagination + search)
 export const getAllTemplate = async (req, res) => {
   try {
     const {
-      page,
-      pageSize,
+      page = 1,
+      pageSize = 10,
+      search,
       sortBy = "createdAt",
       sortOrder = "desc",
-      search,
     } = req.query;
 
-    if (page || pageSize) {
-      const options = {
-        page: parseInt(page) || 1,
-        pageSize: parseInt(pageSize) || 10,
-        sortBy,
-        sortOrder,
-        search,
-      };
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-      const [error, result] = await templateRepository.getManyWithPagination(
-        options
-      );
-      if (error) {
-        return res.status(500).json({ message: "Something went wrong" });
-      }
+    const filters = {};
 
-      res.json({
-        message: "Categories retrieved successfully",
-        items: result.items,
-        pagination: result.pagination,
-      });
-    } else {
-      const [error, categories] = await templateRepository.findMany();
-      if (error) {
-        return res.status(500).json({ message: "Something went wrong" });
-      }
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
-      res.json({
-        message: "Categories retrieved successfully",
-        categories,
-      });
+    let tickets = await Template.find(filters)
+      .populate("user")
+      .populate("category")
+      .populate("subCategory")
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(pageSize));
+
+    if (search) {
+      const regex = new RegExp(search, "i");
+      Template = Template.filter((t) => regex.test(t.user?.name || ""));
     }
-  } catch (err) {
-    console.error("Get all categories error:", err);
-    res.status(500).json({ message: "Something went wrong" });
+
+    const totalCount = tickets.length;
+
+    res.json({
+      data: tickets,
+      total: totalCount,
+      page: parseInt(page),
+      pageSize: parseInt(pageSize),
+      totalPages: Math.ceil(totalCount / parseInt(pageSize)),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching templates", error });
   }
 };
-
 // Get template by ID
 export const getTemplateById = async (req, res) => {
   const { id } = req.params;
@@ -85,7 +82,8 @@ export const getTemplateById = async (req, res) => {
     if (!template) {
       return res.status(404).json({ message: "template not found" });
     }
-
+    await template.populate("category");
+    await template.populate("subCategory");
     res.json({
       message: "template retrieved successfully",
       template,
@@ -99,8 +97,8 @@ export const getTemplateById = async (req, res) => {
 // Update template
 export const updateTemplate = async (req, res) => {
   const { id } = req.params;
-  const { name, content } = req.body;
-
+  const { name, content, status, category, subCategory } = req.body;
+  console.log("status", status);
   try {
     const [findError, existingtemplate] = await templateRepository.findOneById(
       id
@@ -115,7 +113,9 @@ export const updateTemplate = async (req, res) => {
     const updateData = {};
     if (name) updateData.name = name;
     if (content) updateData.content = content;
-
+    if (status) updateData.status = status;
+    if (category) updateData.category = category;
+    if (subCategory) updateData.subCategory = subCategory;
     const [error, updatedtemplate] = await templateRepository.findOneAndUpdate(
       { _id: id },
       updateData,
@@ -157,6 +157,36 @@ export const deleteTemplate = async (req, res) => {
     }
 
     res.json({ message: "template deleted successfully" });
+  } catch (err) {
+    console.error("Delete template error:", err);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+//clone template
+export const cloneTemplate = async (req, res) => {
+  const { id } = req.body;
+  try {
+    const [findError, existingtemplate] = await templateRepository.findOneById(
+      id
+    );
+    if (findError) {
+      return res.status(500).json({ message: "Something went wrong" });
+    }
+    if (!existingtemplate) {
+      return res.status(404).json({ message: "template not found" });
+    }
+
+    const [error, result] = await templateRepository.cloneTemplate(id);
+    console.log("result", result);
+    if (error) {
+      res.json({ message: error });
+      return;
+    }
+    if (result) {
+      res.json({ message: "template clone successfully" });
+      return;
+    }
   } catch (err) {
     console.error("Delete template error:", err);
     res.status(500).json({ message: "Something went wrong" });

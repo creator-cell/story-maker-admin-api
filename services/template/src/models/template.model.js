@@ -11,7 +11,23 @@ const templateSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    subCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved"],
+      default: "pending",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
 
   {

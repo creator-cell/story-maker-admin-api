@@ -16,6 +16,16 @@ const {
 
 const findByName = async (name) => findOne({ name });
 
+const cloneTemplate = async (id) => {
+  const getData = await Template.findById(id)
+    .populate("category")
+    .populate("subCategory");
+  if (!getData) return null;
+  const clonedData = getData.toObject();
+  delete clonedData._id;
+  const newTemplate = await Template.create(clonedData);
+  return newTemplate;
+};
 const templateRepository = {
   insertOne,
   findOne,
@@ -28,6 +38,7 @@ const templateRepository = {
   count,
   aggregate,
   findByName,
+  cloneTemplate,
 };
 
 export default templateRepository;
