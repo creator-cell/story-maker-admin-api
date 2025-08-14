@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import assetsRepository from "../respositories/assetsRepository.js";
-import { deleteFile, uploadFile } from "../helper/fileManage.js";
+import { UploadFile, DeleteFile, GetFile, getUrlToFile } from "../helper/s3Client.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -21,9 +21,10 @@ const addAsset = async (req, res, next) => {
 
         const fileName = `${Date.now()}-${document?.originalname}`;
 
-        const documentData = uploadFile(fileName, document?.buffer, "assets",);
+        const documentData = await UploadFile(fileName, document?.buffer, "assets",);
 
         if (!documentData?.success) {
+            console.log(documentData);
             return res.status(500).json({
                 success:false,
                 message: "Something want wrong"
@@ -38,6 +39,7 @@ const addAsset = async (req, res, next) => {
 
         const [errors, result] = await assetsRepository.insertOne(data);
         if (errors) {
+            console.log(errors);
             return res.status(500).json({
                 status: "fail",
                 statusCode: 500,
@@ -178,7 +180,7 @@ const updateAsset = async (req, res, next) => {
         if (document) {
             const fileName = `${Date.now()}-${document?.originalname}`;
 
-            const documentData = uploadFile(fileName, document?.buffer, "assets",);
+            const documentData = await UploadFile(fileName, document?.buffer, "assets",);
 
             if (!documentData?.success) {
                 return res.status(500).json({
@@ -199,7 +201,7 @@ const updateAsset = async (req, res, next) => {
         });
 
         if (document) {
-            deleteFile(oldUrl?.split('assets/')?.[1],'assets');
+            await DeleteFile(oldUrl?.split('.com/')?.[1]);
         }
 
         res.status(200).json({
@@ -235,7 +237,7 @@ const deleteAssets = async (req, res, next) => {
             });
         }
 
-        deleteFile(assets?.url?.split('assets/')?.[1], "assets");
+        await DeleteFile(assets?.url?.split('.com/')?.[1]);
 
         await assetsRepository.deleteOne({_id: new mongoose.Types.ObjectId(id)});
 
@@ -281,9 +283,13 @@ const cloneAssets = async (req, res, next) => {
 
         const fileName = `${Date.now()}-${originalFileName}`;
 
-        const fileBuffer = readFileSync(join(__dirname, '..', 'uploads', 'assets', assetFileName));
+        // const fileBuffer = readFileSync(join(__dirname, '..', 'uploads', 'assets', assetFileName));
 
-        const documentData = uploadFile(fileName, fileBuffer, "assets",);
+        const fileBuffer = await getUrlToFile(assetData?.url);
+
+        // const fileBuffer = readFileSync(assetData?.url);
+
+        const documentData = await UploadFile(fileName, fileBuffer, "assets",);
 
         if (!documentData?.success) {
             return res.status(500).json({
