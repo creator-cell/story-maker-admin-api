@@ -11,10 +11,22 @@ import { connectDB } from './src/lib/db.js';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+import cron from "node-cron";
+import { expirePlans, handleUpcomingPlan } from "./src/helper/cronJob.js";
 
 dotenv.config({ path: '.env.local' });
 
 const app = express();
+
+// expire complete plan cron-job
+cron.schedule('* 4/* * * *', async () => {
+  await expirePlans();
+});
+
+// set upcoming plan cron-job
+cron.schedule('* 4/* * * *', async () => {
+  await handleUpcomingPlan();
+});
 
 // i18n middleware
 app.use(i18nMiddleware);
@@ -24,7 +36,7 @@ app.use(i18nMiddleware);
 // Middlewares
 app.use(helmet());
 app.use(cors());
-console.log(path.join(__dirname, 'uploads','assets'));
+
 app.use('/uploads', express.static(path.join(__dirname, 'src', 'uploads')));
 app.use(morgan('dev'));
 app.use(express.json());

@@ -19,8 +19,8 @@ import {
 const assetsRoutes = express.Router();
 
 assetsRoutes.get('/',
-    auth,
-    checkMenuPermission("Plans","read"),
+    // auth,
+    // checkMenuPermission("Plans","read"),
     getPlan
 );
 

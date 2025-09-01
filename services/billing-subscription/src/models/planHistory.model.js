@@ -11,6 +11,10 @@ const PlanHistorySchema = Schema({
         required: true,
         type: mongoose.Types.ObjectId,
         ref: "plan"
+    },
+    activeDate: {
+        type: Date,
+        required: true,
     }
 }, {
     timestamps: true

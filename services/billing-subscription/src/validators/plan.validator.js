@@ -31,24 +31,16 @@ const validateCreatePlan = [
         .if(body("type").notEmpty())
         .isIn(["team", "individual"])
         .withMessage("Type must 'team' OR 'individual'"),
-    check("plans")
-        .isArray({min: 1})
-        .withMessage("Plans must be an array with at least one item"),
-    check("plans.*.price")
-        .isNumeric()
-        .withMessage("Price must be numeric")
+    check("price")
         .notEmpty()
-        .withMessage("Price is require"),
-    check("plans.*.duration")
+        .withMessage("Price is require")
+        .isFloat({ min: 0 })
+        .withMessage("Price is invalid"),
+    check("duration")
         .notEmpty()
         .withMessage("Duration is require")
-        .isIn(["month", "week", "day"])
-        .withMessage("Duration must be a one of: month, week, day"),
-    check("plans.*.value")
-        .notEmpty()
-        .withMessage("Duration value is require")
-        .isNumeric()
-        .withMessage("Duration value must be numeric"),
+        .isIn(["monthly", "yearly"])
+        .withMessage("Duration must be monthly or yearly"),
     check("features")
         .if(body("features").notEmpty())
         .isArray()
@@ -75,24 +67,14 @@ const validateUpdatePlan = [
         .if(body("type").notEmpty())
         .isIn(["team", "individual"])
         .withMessage("Type must 'team' OR 'individual'"),
-    check("plans")
-        .isArray({min: 1})
-        .withMessage("Plans must be an array with at least one item"),
-    check("plans.*.price")
-        .isNumeric()
-        .withMessage("Price must be numeric")
-        .notEmpty()
-        .withMessage("Price is require"),
-    check("plans.*.duration")
-        .notEmpty()
-        .withMessage("Duration is require")
-        .isIn(["month", "week", "day"])
-        .withMessage("Duration must be a one of: month, week, day"),
-    check("plans.*.value")
-        .notEmpty()
-        .withMessage("Duration value is require")
-        .isNumeric()
-        .withMessage("Duration value must be numeric"),
+    check("price")
+        .if(body("price").notEmpty())
+        .isFloat({ min: 0 })
+        .withMessage("Price is invalid"),
+    check("duration")
+        .if(body("duration").notEmpty())
+        .isIn(["monthly", "yearly"])
+        .withMessage("Duration must be monthly or yearly"),
     check("features")
         .if(body("features").notEmpty())
         .isArray()

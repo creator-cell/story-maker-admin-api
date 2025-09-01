@@ -19,23 +19,15 @@ const planSchema = Schema({
         enum: ["team", "individual"],
         default: "individual"
     },
-    plans: [
-        {
-            price: {
-                type: Number,
-                required: true
-            },
-            duration: {
-                type: String,
-                enum: ["month", "week", "day"],
-                required: true
-            },
-            value: {
-                type: Number,
-                required: true
-            }
-        }
-    ],
+    price: {
+        type: Number,
+        required: true
+    },
+    duration: {
+        type: String,
+        enum: ["monthly", "yearly"],
+        required: true
+    },
     features: [
         {
             type: String,
