@@ -2,7 +2,14 @@ import categoryRepository from "../respositories/categoryRepository.js";
 
 // Create Category
 export const createCategory = async (req, res) => {
-  const { name, description, subCategories, assets, templates } = req.body;
+  const {
+    name,
+    description,
+    subCategories,
+    assets,
+    templates,
+    parentCategory,
+  } = req.body;
 
   try {
     const [findError, existingCategory] = await categoryRepository.findByName(
@@ -21,6 +28,7 @@ export const createCategory = async (req, res) => {
       subCategories: subCategories || [],
       assets: assets || [],
       templates: templates || [],
+      parentCategory: parentCategory,
     });
 
     if (error) {

@@ -16,16 +16,24 @@ const {
 
 const findByName = async (name) => findOne({ name });
 
-const cloneTemplate = async (id) => {
-  const getData = await Template.findById(id)
-    .populate("category")
-    .populate("subCategory");
-  if (!getData) return null;
-  const clonedData = getData.toObject();
-  delete clonedData._id;
-  const newTemplate = await Template.create(clonedData);
-  return newTemplate;
+const cloneTemplate = async (data) => {
+  try {
+    let clonedData = { ...data };
+
+    delete clonedData._id;
+    delete clonedData.__v;
+
+    clonedData.status = "pending";
+
+    const newTemplate = new Template(clonedData);
+    await newTemplate.save();
+
+    return [null, newTemplate];
+  } catch (err) {
+    return [err, null];
+  }
 };
+
 const templateRepository = {
   insertOne,
   findOne,

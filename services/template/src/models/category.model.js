@@ -12,7 +12,11 @@ const categorySchema = new mongoose.Schema(
       trim: true,
     },
 
-
+    parentCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
     assets: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -22,11 +26,10 @@ const categorySchema = new mongoose.Schema(
     templates: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Template", 
+        ref: "Template",
       },
     ],
 
-  
     subCategories: [
       {
         name: {
@@ -56,8 +59,6 @@ const categorySchema = new mongoose.Schema(
         },
       },
     ],
-
-   
   },
   {
     timestamps: true,

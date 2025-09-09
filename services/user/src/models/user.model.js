@@ -36,6 +36,26 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  subscription: {
+    startDate: {
+      type: Date,
+      default: null,
+    },
+    expireDate: {
+      type: Date,
+      default: null
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Active", "Expired"],
+      default: "Pending"
+    },
+    upcomingPlan: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+      ref: "plan"
+    }
   }
 });
 
