@@ -20,7 +20,6 @@ services/AI/.mypy_cache/
 
 # === Environment files ===
 **/.env
-**/.env.*
 
 # === Logs ===
 **/logs/
