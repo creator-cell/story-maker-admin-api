@@ -2,7 +2,7 @@ import templateRepository from "../respositories/templateRepository.js";
 import Template from "../models/template.model.js";
 // Create template
 export const createTemplate = async (req, res) => {
-  const { name, content, category, status, subCategory } = req.body;
+  const { name, content, category, status, subCategory, user } = req.body;
 
   try {
     const [error, template] = await templateRepository.insertOne({
@@ -11,6 +11,7 @@ export const createTemplate = async (req, res) => {
       category,
       status,
       subCategory,
+      user,
     });
 
     if (error) {
@@ -97,8 +98,9 @@ export const getTemplateById = async (req, res) => {
 // Update template
 export const updateTemplate = async (req, res) => {
   const { id } = req.params;
-  const { name, content, status, category, subCategory } = req.body;
-  console.log("status", status);
+  const { name, content, status, category, subCategory, user } = req.body;
+
+  console.log("status", user);
   try {
     const [findError, existingtemplate] = await templateRepository.findOneById(
       id
@@ -116,6 +118,7 @@ export const updateTemplate = async (req, res) => {
     if (status) updateData.status = status;
     if (category) updateData.category = category;
     if (subCategory) updateData.subCategory = subCategory;
+    if (user) updateData.user = user;
     const [error, updatedtemplate] = await templateRepository.findOneAndUpdate(
       { _id: id },
       updateData,
