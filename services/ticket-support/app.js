@@ -18,14 +18,21 @@ app.use(i18nMiddleware);
 
 // Middlewares
 app.use(helmet());
-app.use(cors());
+// app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static Files
 app.use(
   "/uploads",
+  cors({ origin: process.env.FRONT_URL }),
   express.static(path.join(process.cwd(), "services/ticket-support/uploads"))
 );
 

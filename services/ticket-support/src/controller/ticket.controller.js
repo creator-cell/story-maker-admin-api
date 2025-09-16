@@ -1,5 +1,6 @@
 import ticketRepository from "../respositories/ticketRepository.js";
 import Ticket from "../models/ticket.model.js";
+import sendMail from "../utils/mailer.js";
 // Create Role
 export const createTicket = async (req, res) => {
   try {
@@ -114,7 +115,6 @@ export const updateTicket = async (req, res) => {
   let { messages, sender, role, ...otherUpdates } = req.body;
 
   try {
-    // Normalize messages into array
     if (typeof messages === "string") {
       messages = [{ message: messages }];
     } else if (messages && !Array.isArray(messages)) {
@@ -127,7 +127,6 @@ export const updateTicket = async (req, res) => {
       newMessage = messages[0];
     }
 
-    // Always enforce sender/role/sentAt
     if (newMessage) {
       newMessage = {
         ...newMessage,
@@ -137,7 +136,6 @@ export const updateTicket = async (req, res) => {
       };
     }
 
-    // If image uploaded, add it to message
     if (req.file) {
       if (!newMessage) {
         newMessage = {
@@ -149,7 +147,6 @@ export const updateTicket = async (req, res) => {
       newMessage.image = `/uploads/chat/${req.file.filename}`;
     }
 
-    // Build update query
     const updateQuery = { ...otherUpdates };
     if (newMessage) {
       updateQuery.$push = { messages: newMessage };
@@ -159,10 +156,33 @@ export const updateTicket = async (req, res) => {
       { _id: id },
       updateQuery,
       { new: true }
-    ).populate("messages.sender", "name email");
+    )
+      .populate("messages.sender", "name email")
+      .populate("userId");
 
     if (!updatedTicket) {
       return res.status(400).json({ message: "ticket update_failed" });
+    }
+    const userEmail = updatedTicket.userId?.email;
+
+    if (userEmail) {
+      await sendMail({
+        to: userEmail,
+        subject: "Your support ticket has been updated",
+        html: `
+          <p>Hi ${updatedTicket.userId.name},</p>
+          <p>Your ticket <strong>#${
+            updatedTicket._id
+          }</strong> has a new update:</p>
+          <blockquote>${
+            newMessage?.message || "See your ticket for details."
+          }</blockquote>
+          <p><a href="https://yourdomain.com/tickets/${
+            updatedTicket._id
+          }">View Ticket</a></p>
+          <p>Best regards,<br/>Support Team</p>
+        `,
+      });
     }
 
     res.json({ message: "ticket updated", ticket: updatedTicket });
