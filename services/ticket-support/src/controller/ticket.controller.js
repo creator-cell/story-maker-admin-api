@@ -93,49 +93,73 @@ export const getUserTicket = async (req, res) => {
 export const getTicketById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [error, user] = await ticketRepository.findOneById(id);
-    if (error || !user) {
+    const [error, ticket] = await ticketRepository.findOneById(id);
+    if (error || !ticket) {
       return res.status(404).json({ message: "ticket not found" });
     }
-    await user.populate("moderator");
-    res.json({ user });
+
+    await ticket.populate([
+      { path: "moderator", select: "name" },
+      { path: "messages.sender", select: "name" },
+    ]);
+
+    res.json({ ticket });
   } catch (err) {
     res.status(500).json({ message: "something went wrong" });
   }
 };
 
-// export const updateTicket = async (req, res) => {
-//   const { id } = req.params;
-//   const updateData = req.body;
-
-//   try {
-//     const [error, user] = await ticketRepository.findOneAndUpdate(
-//       { _id: id },
-//       updateData
-//     );
-//     if (error || !user) {
-//       return res.status(400).json({ message: "ticket update_failed" });
-//     }
-
-//     res.json({ message: "ticket updated", user });
-//   } catch (err) {
-//     res.status(500).json({ message: "Something went wrong" });
-//   }
-// };
-
 export const updateTicket = async (req, res) => {
   const { id } = req.params;
-  const { messages, ...otherUpdates } = req.body;
+  let { messages, sender, role, ...otherUpdates } = req.body;
 
   try {
-    const updatedTicket = await ticketRepository.findOneAndUpdate(
+    // Normalize messages into array
+    if (typeof messages === "string") {
+      messages = [{ message: messages }];
+    } else if (messages && !Array.isArray(messages)) {
+      messages = [messages];
+    }
+
+    let newMessage = null;
+
+    if (messages && messages.length > 0) {
+      newMessage = messages[0];
+    }
+
+    // Always enforce sender/role/sentAt
+    if (newMessage) {
+      newMessage = {
+        ...newMessage,
+        sender: sender,
+        role: role || "user",
+        sentAt: newMessage.sentAt || new Date(),
+      };
+    }
+
+    // If image uploaded, add it to message
+    if (req.file) {
+      if (!newMessage) {
+        newMessage = {
+          sender: req.user?._id,
+          role: "user",
+          sentAt: new Date(),
+        };
+      }
+      newMessage.image = `/uploads/chat/${req.file.filename}`;
+    }
+
+    // Build update query
+    const updateQuery = { ...otherUpdates };
+    if (newMessage) {
+      updateQuery.$push = { messages: newMessage };
+    }
+
+    const updatedTicket = await Ticket.findOneAndUpdate(
       { _id: id },
-      {
-        ...otherUpdates,
-        ...(messages && { $push: { messages: { $each: messages } } }),
-      },
+      updateQuery,
       { new: true }
-    );
+    ).populate("messages.sender", "name email");
 
     if (!updatedTicket) {
       return res.status(400).json({ message: "ticket update_failed" });

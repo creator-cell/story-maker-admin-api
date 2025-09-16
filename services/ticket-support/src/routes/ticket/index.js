@@ -17,7 +17,7 @@ import {
   getModeratorTicket,
   getUserTicket,
 } from "../../controller/ticket.controller.js";
-
+import upload from "../../middlewares/upload.js";
 import auth from "../../middlewares/auth.js"; // JWT middleware
 
 import checkPermission from "../../middlewares/middleware.js";
@@ -67,6 +67,7 @@ router.put(
   checkPermission("write", "Tickets"),
   validateUpdateTicket,
   handleValidationErrors,
+  upload.single("image"),
   updateTicket
 );
 router.get(
