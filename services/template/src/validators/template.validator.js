@@ -8,7 +8,7 @@ export const validateCreateTemplate = [
     .withMessage("Category name must be between 2 and 50 characters")
     .trim(),
 
-  body("content").notEmpty().withMessage("Template content is required").trim(),
+  //body("content").notEmpty().withMessage("Template content is required").trim(),
 ];
 
 export const validateUpdateTemplate = [
