@@ -32,9 +32,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   "/uploads",
-  cors({ origin: process.env.FRONT_URL }),
+  (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", process.env.FRONT_URL || "http://localhost:3000");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
   express.static(path.join(process.cwd(), "services/ticket-support/uploads"))
 );
+
 
 // Routes
 app.use("/", routes);
