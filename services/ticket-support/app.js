@@ -19,12 +19,7 @@ app.use(i18nMiddleware);
 // Middlewares
 app.use(helmet());
 // app.use(cors());
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  })
-);
+app.use(cors());
 
 app.use(morgan("dev"));
 app.use(express.json());
@@ -33,13 +28,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   "/uploads",
   (req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", process.env.FRONT_URL || "http://localhost:3000");
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      process.env.FRONT_URL || "http://localhost:3000"
+    );
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     next();
   },
   express.static(path.join(process.cwd(), "services/ticket-support/uploads"))
 );
-
 
 // Routes
 app.use("/", routes);
