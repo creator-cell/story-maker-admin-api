@@ -1,349 +1,379 @@
 import mongoose from "mongoose";
 import assetsRepository from "../respositories/assetsRepository.js";
-import { UploadFile, DeleteFile, GetFile, getUrlToFile } from "../helper/s3Client.js";
+import {
+  UploadFile,
+  DeleteFile,
+  GetFile,
+  getUrlToFile,
+} from "../helper/s3Client.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { uploadMediaToCloudinary } from "../helper/cloudinary.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const addAsset = async (req, res, next) => {
-    try {
-        const reqData = req.body;
-        const document = req.file;
+  try {
+    const reqData = req.body;
+    const document = req.file;
+    const { isTemplateUpload } = req.query;
 
-        if (!document) {
-            return res.status(404).json({
-                success:false,
-                message: "Please upload a document. It is required."
-            });
-        }
-
-        const fileName = `${Date.now()}-${document?.originalname}`;
-
-        const documentData = await UploadFile(fileName, document?.buffer, "assets",);
-
-        if (!documentData?.success) {
-            console.log(documentData);
-            return res.status(500).json({
-                success:false,
-                message: "Something want wrong"
-            });
-        }
-
-        const data = {
-            ...reqData,
-            url: documentData.url,
-            uploadedBy: req.user.userId
-        };
-
-        const [errors, result] = await assetsRepository.insertOne(data);
-        if (errors) {
-            console.log(errors);
-            return res.status(500).json({
-                status: "fail",
-                statusCode: 500,
-                message: "Something went wrong",
-                data: {}
-            });
-        }
-
-        return res.status(201).json({
-            status: "success",
-            statusCode: 201,
-            message: "Assets have been added successfully."
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: "fail",
-            statusCode: 500,
-            message: "Something went wrong.",
-            data: {}
-        });
+    if (!document) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload a document. It is required.",
+      });
     }
-}
+
+    const fileName = `${Date.now()}-${document.originalname}`;
+    let uploadResult;
+
+    if (isTemplateUpload === "true") {
+      console.log("yes");
+      uploadResult = await uploadMediaToCloudinary(document);
+      console.log("Uploaded to Cloudinary:", uploadResult.secure_url);
+    } else {
+      uploadResult = await UploadFile(fileName, document.buffer, "assets");
+      console.log("Uploaded to Server:", uploadResult.url);
+    }
+
+    if (!uploadResult || uploadResult.success === false) {
+      return res.status(500).json({
+        success: false,
+        message: "File upload failed.",
+      });
+    }
+
+    const data = {
+      ...reqData,
+      url: uploadResult.secure_url || uploadResult.url,
+      uploadedBy: req.user.userId,
+    };
+
+    const [errors, result] = await assetsRepository.insertOne(data);
+    if (errors) {
+      console.error(errors);
+      return res.status(500).json({
+        status: "fail",
+        statusCode: 500,
+        message: "Something went wrong while saving asset data.",
+      });
+    }
+
+    return res.status(201).json({
+      status: "success",
+      statusCode: 201,
+      message: "Asset added successfully.",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong.",
+    });
+  }
+};
 
 const fetchAsset = async (req, res, next) => {
-    try {
-        const { page, pageSize, sortBy = 'createdAt', sortOrder = 'desc', search, menuName, id } = req.query;
+  try {
+    const {
+      page,
+      pageSize,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      search,
+      menuName,
+      id,
+    } = req.query;
 
-        let assetData = {};
+    let assetData = {};
 
-        let accessPermission = { read: false, write: false, both: false};
+    let accessPermission = { read: false, write: false, both: false };
 
-        req?.user?.rolePermissions?.menu?.map(p => {
-            if (p?.menuName?.toLowerCase() == "assets") {
-                accessPermission = {
-                    both: p?.both,
-                    read: p?.read,
-                    write: p?.write
-                }
-            }
+    req?.user?.rolePermissions?.menu?.map((p) => {
+      if (p?.menuName?.toLowerCase() == "assets") {
+        accessPermission = {
+          both: p?.both,
+          read: p?.read,
+          write: p?.write,
+        };
+      }
+    });
+
+    if (id && mongoose.isValidObjectId(id)) {
+      const [error, result] = await assetsRepository.findOneById(id);
+      if (!result) {
+        return res.status(404).json({
+          status: "fail",
+          statusCode: 404,
+          message: "Asset not found",
+          data: {},
         });
+      }
 
-        if (id && mongoose.isValidObjectId(id)) {
-            const [error, result] = await assetsRepository.findOneById(id);
-            if (!result) {
-                return res.status(404).json({
-                    status: "fail",
-                    statusCode: 404,
-                    message: "Asset not found",
-                    data: {}
-                });
-            }
+      assetData = result;
+    } else {
+      const options = {
+        page: parseInt(page) || 1,
+        pageSize: parseInt(pageSize) || 10,
+        sortBy,
+        sortOrder,
+        search,
+        menuName,
+      };
 
-            assetData = result;
-            
-        } else {
+      const { error, data } = await assetsRepository.getManyWithPagination(
+        {},
+        options
+      );
 
-            const options = {
-                page: parseInt(page) || 1,
-                pageSize: parseInt(pageSize) || 10,
-                sortBy,
-                sortOrder,
-                search,
-                menuName
-            };
-
-            const {error, data} = await assetsRepository.getManyWithPagination({}, options);
-
-            assetData = {
-                assets: data,
-                accessPermission: accessPermission
-            };
-        }
-
-        res.status(200).json({
-            status: "success",
-            statusCode: 200,
-            message: "Successfully fetch assets",
-            data: assetData
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: "fail",
-            statusCode: 500,
-            message: "Something went wrong.",
-            data: {}
-        });
+      assetData = {
+        assets: data,
+        accessPermission: accessPermission,
+      };
     }
-}
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Successfully fetch assets",
+      data: assetData,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong.",
+      data: {},
+    });
+  }
+};
 
 const updateStatus = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
-        await assetsRepository.updateOne({_id: new mongoose.Types.ObjectId(id)}, {status: status});
+    await assetsRepository.updateOne(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { status: status }
+    );
 
-        res.status(200).json({
-            status: "success",
-            statusCode: 200,
-            message: "Status updated successfully",
-            data: {}
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: "fail",
-            statusCode: 500,
-            message: "Something went wrong.",
-            data: {}
-        });
-    }
-}
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Status updated successfully",
+      data: {},
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong.",
+      data: {},
+    });
+  }
+};
 
 const updateAsset = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const data = req.body;
+  try {
+    const { id } = req.params;
+    const data = req.body;
 
-        const document = req.file;
+    const document = req.file;
 
-        const [err, assets] = await assetsRepository.findOne({_id : new mongoose.Types.ObjectId(id)});
-        
-        if (!assets) {
-            return res.status(404).json({
-                status: "fail",
-                statusCode: 404,
-                message: "Asset not found",
-                data: {}
-            });
-        }
+    const [err, assets] = await assetsRepository.findOne({
+      _id: new mongoose.Types.ObjectId(id),
+    });
 
-        const oldUrl = assets?.url;
-        let assetUrl = assets?.url;
-        if (document) {
-            const fileName = `${Date.now()}-${document?.originalname}`;
-
-            const documentData = await UploadFile(fileName, document?.buffer, "assets",);
-
-            if (!documentData?.success) {
-                return res.status(500).json({
-                    status: "fail",
-                    statusCode: 500,
-                    message: "Some thing want wrong",
-                    data: {}
-                });
-            }
-
-            assetUrl =  documentData?.url;   
-        }
-
-        
-        await assetsRepository.updateOne({_id: new mongoose.Types.ObjectId(id)}, {
-            ...data,
-            url: assetUrl
-        });
-
-        if (document) {
-            await DeleteFile(oldUrl?.split('.com/')?.[1]);
-        }
-
-        res.status(200).json({
-            status: "success",
-            statusCode: 200,
-            message: "Asset update successfully",
-            data: {}
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: "fail",
-            statusCode: 500,
-            message: "Something went wrong.",
-            data: {}
-        });
+    if (!assets) {
+      return res.status(404).json({
+        status: "fail",
+        statusCode: 404,
+        message: "Asset not found",
+        data: {},
+      });
     }
-}
+
+    const oldUrl = assets?.url;
+    let assetUrl = assets?.url;
+    if (document) {
+      const fileName = `${Date.now()}-${document?.originalname}`;
+
+      const documentData = await UploadFile(
+        fileName,
+        document?.buffer,
+        "assets"
+      );
+
+      if (!documentData?.success) {
+        return res.status(500).json({
+          status: "fail",
+          statusCode: 500,
+          message: "Some thing want wrong",
+          data: {},
+        });
+      }
+
+      assetUrl = documentData?.url;
+    }
+
+    await assetsRepository.updateOne(
+      { _id: new mongoose.Types.ObjectId(id) },
+      {
+        ...data,
+        url: assetUrl,
+      }
+    );
+
+    if (document) {
+      await DeleteFile(oldUrl?.split(".com/")?.[1]);
+    }
+
+    res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Asset update successfully",
+      data: {},
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong.",
+      data: {},
+    });
+  }
+};
 
 const deleteAssets = async (req, res, next) => {
-    try {
-        const { id } = req?.params;
+  try {
+    const { id } = req?.params;
 
-        const [err, assets] = await assetsRepository.findOneById(id,{});
+    const [err, assets] = await assetsRepository.findOneById(id, {});
 
-        if (!assets) {
-            return res.status(404).json({
-                status: "fail",
-                statusCode: 404,
-                message: "Assets not found",
-                data: {}
-            });
-        }
-
-        await DeleteFile(assets?.url?.split('.com/')?.[1]);
-
-        await assetsRepository.deleteOne({_id: new mongoose.Types.ObjectId(id)});
-
-        return res.status(200).json({
-            status: "success",
-            statusCode: 200,
-            message: "assets deleted successfully",
-            data: {}
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: "fail",
-            statusCode: 500,
-            message: "Something went wrong.",
-            data: {}
-        });
+    if (!assets) {
+      return res.status(404).json({
+        status: "fail",
+        statusCode: 404,
+        message: "Assets not found",
+        data: {},
+      });
     }
-}
+
+    await DeleteFile(assets?.url?.split(".com/")?.[1]);
+
+    await assetsRepository.deleteOne({ _id: new mongoose.Types.ObjectId(id) });
+
+    return res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "assets deleted successfully",
+      data: {},
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong.",
+      data: {},
+    });
+  }
+};
 
 const cloneAssets = async (req, res, next) => {
-    try {
-        const { assetId } = req.body;
+  try {
+    const { assetId } = req.body;
 
-        const [err, assetData] = await assetsRepository.findOneById(assetId);
+    const [err, assetData] = await assetsRepository.findOneById(assetId);
 
-        if (!assetData?._doc) {
-            return res.status(404).json({
-                status: "fail",
-                statusCode: 404,
-                message: "Asset not found.",
-                data: {}
-            });
-        }
-
-        let { _id, ...reqData} = assetData?._doc;
-
-
-        const assetFileName = assetData?.url?.split('assets/')?.[1];
-
-        const originalFileName = assetFileName?.replace(`${assetFileName?.split('-')?.[0]}-`,"");
-
-        const fileName = `${Date.now()}-${originalFileName}`;
-
-        // const fileBuffer = readFileSync(join(__dirname, '..', 'uploads', 'assets', assetFileName));
-
-        const fileBuffer = await getUrlToFile(assetData?.url);
-
-        // const fileBuffer = readFileSync(assetData?.url);
-
-        const documentData = await UploadFile(fileName, fileBuffer, "assets",);
-
-        if (!documentData?.success) {
-            return res.status(500).json({
-                success:false,
-                message: "Something want wrong"
-            });
-        }
-
-        const data = {
-            ...reqData,
-            url: documentData.url,
-            status: "Pending",
-            uploadedBy: req.user.userId
-        };
-
-        console.log(data);
-
-        const [errors, result] = await assetsRepository.insertOne(data);
-        
-        if (errors) {
-            console.log(errors);
-            return res.status(500).json({
-                status: "fail",
-                statusCode: 500,
-                message: "Something went wrong",
-                data: {}
-            });
-        }
-
-        return res.status(201).json({
-            status: "success",
-            statusCode: 201,
-            message: "Asset has been cloned successfully.",
-            data: {
-                cloneId: result?._id
-            }
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: "fail",
-            statusCode: 500,
-            message: "Something went wrong.",
-            data: {}
-        });
+    if (!assetData?._doc) {
+      return res.status(404).json({
+        status: "fail",
+        statusCode: 404,
+        message: "Asset not found.",
+        data: {},
+      });
     }
-}
+
+    let { _id, ...reqData } = assetData?._doc;
+
+    const assetFileName = assetData?.url?.split("assets/")?.[1];
+
+    const originalFileName = assetFileName?.replace(
+      `${assetFileName?.split("-")?.[0]}-`,
+      ""
+    );
+
+    const fileName = `${Date.now()}-${originalFileName}`;
+
+    // const fileBuffer = readFileSync(join(__dirname, '..', 'uploads', 'assets', assetFileName));
+
+    const fileBuffer = await getUrlToFile(assetData?.url);
+
+    // const fileBuffer = readFileSync(assetData?.url);
+
+    const documentData = await UploadFile(fileName, fileBuffer, "assets");
+
+    if (!documentData?.success) {
+      return res.status(500).json({
+        success: false,
+        message: "Something want wrong",
+      });
+    }
+
+    const data = {
+      ...reqData,
+      url: documentData.url,
+      status: "Pending",
+      uploadedBy: req.user.userId,
+    };
+
+    console.log(data);
+
+    const [errors, result] = await assetsRepository.insertOne(data);
+
+    if (errors) {
+      console.log(errors);
+      return res.status(500).json({
+        status: "fail",
+        statusCode: 500,
+        message: "Something went wrong",
+        data: {},
+      });
+    }
+
+    return res.status(201).json({
+      status: "success",
+      statusCode: 201,
+      message: "Asset has been cloned successfully.",
+      data: {
+        cloneId: result?._id,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong.",
+      data: {},
+    });
+  }
+};
 
 export {
-    addAsset,
-    fetchAsset,
-    updateAsset,
-    updateStatus,
-    deleteAssets,
-    cloneAssets
+  addAsset,
+  fetchAsset,
+  updateAsset,
+  updateStatus,
+  deleteAssets,
+  cloneAssets,
 };
