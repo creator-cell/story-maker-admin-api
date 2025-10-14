@@ -1,12 +1,12 @@
 import userRepository from "../respositories/userRepository.js";
+
+import templateModel from "../models/template.model.js";
 import {
   getDateRange,
   getDateWeek,
   getMonthWeekDateRange,
 } from "../helper/dateMathod.js";
-import {
-    getStorage
-} from "../helper/s3Client.js"
+import { getStorage } from "../helper/s3Client.js";
 
 const filterDataByMode = (data, dateRange, mode) => {
   const statistic = [];
@@ -152,6 +152,67 @@ const dashboardData = async (req, res, next) => {
   }
 };
 
+const templateCreated = async (req, res, next) => {
+  try {
+    const data = await templateModel.countDocuments();
+    return res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Data fetched successfully.",
+      data: {
+        templateCount: data,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong",
+      data: {},
+    });
+  }
+};
+
+const templateUsed = async (req, res, next) => {
+  try {
+    const allTemplatesUsage = await TemplateUsage.aggregate([
+      {
+        $group: {
+          _id: "$template",
+          usageCount: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "templates",
+          localField: "_id",
+          foreignField: "_id",
+          as: "templateDetails",
+        },
+      },
+      {
+        $unwind: "$templateDetails",
+      },
+      {
+        $project: {
+          _id: 0,
+          templateName: "$templateDetails.name",
+          usageCount: 1,
+        },
+      },
+      {
+        $sort: { usageCount: -1 },
+      },
+    ]);
+
+    res.json(allTemplatesUsage);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const userGrowthData = async (req, res, next) => {
   try {
     let { mode, date } = req.query;
@@ -204,9 +265,11 @@ const userGrowthData = async (req, res, next) => {
         $set: {
           date: {
             $concat: [
-              {$toString: "$_id.year"},"-",
-              {$toString: "$_id.month"},"-",
-              {$toString: "$_id.day"},
+              { $toString: "$_id.year" },
+              "-",
+              { $toString: "$_id.month" },
+              "-",
+              { $toString: "$_id.day" },
             ],
           },
         },
@@ -260,18 +323,16 @@ const userGrowthData = async (req, res, next) => {
 
 const awsStorages = async (req, res, next) => {
   try {
-
     const data = await getStorage();
 
     return res.status(200).json({
-        status: "success",
-        statusCode: 200,
-        message: "Successfully get storage",
-        data: {
-            bucketSize: data?.data
-        }
+      status: "success",
+      statusCode: 200,
+      message: "Successfully get storage",
+      data: {
+        bucketSize: data?.data,
+      },
     });
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -296,4 +357,11 @@ const topTemplateAssets = async (req, res, next) => {
   }
 };
 
-export { dashboardData, userGrowthData, awsStorages, topTemplateAssets };
+export {
+  dashboardData,
+  userGrowthData,
+  awsStorages,
+  topTemplateAssets,
+  templateCreated,
+  templateUsed,
+};

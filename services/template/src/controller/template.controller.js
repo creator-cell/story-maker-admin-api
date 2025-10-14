@@ -27,7 +27,27 @@ export const createTemplate = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+export const trackTemplateUsage = async (req, res) => {
+  const { templateId, userId } = req.body;
 
+  try {
+    const usage = new Template({
+      template: templateId,
+      user: userId,
+    });
+
+    await usage.save();
+
+    console.log("Template usage tracked.");
+
+    res.status(200).json({
+      message: "Template usage successfully tracked",
+    });
+  } catch (err) {
+    console.error("Error tracking template usage:", err);
+    res.status(500).json({ message: "Error tracking template usage" });
+  }
+};
 export const getAllTemplate = async (req, res) => {
   try {
     const {
