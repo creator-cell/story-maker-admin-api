@@ -19,6 +19,10 @@ const templateSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
     },
+    templateCount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ["pending", "approved"],

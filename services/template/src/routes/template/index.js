@@ -16,6 +16,7 @@ import {
   deleteTemplate,
   cloneTemplate,
   trackTemplateUsage,
+  getTopTemplate,
 } from "../../controller/template.controller.js";
 
 import auth from "../../middlewares/auth.js"; // JWT middleware
@@ -44,6 +45,12 @@ router.post(
   auth,
   checkPermission("read", "Template"),
   trackTemplateUsage
+);
+router.get(
+  "/getTopTemplate",
+  auth,
+  checkPermission("read", "Template"),
+  getTopTemplate
 );
 router.put(
   "/:id",

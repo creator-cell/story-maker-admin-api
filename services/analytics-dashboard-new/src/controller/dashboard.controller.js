@@ -176,11 +176,11 @@ const templateCreated = async (req, res, next) => {
 
 const templateUsed = async (req, res, next) => {
   try {
-    const allTemplatesUsage = await TemplateUsage.aggregate([
+    const allTemplatesUsage = await templateModel.aggregate([
       {
         $group: {
           _id: "$template",
-          usageCount: { $sum: 1 },
+          templateCount: { $sum: 1 },
         },
       },
       {
@@ -198,11 +198,11 @@ const templateUsed = async (req, res, next) => {
         $project: {
           _id: 0,
           templateName: "$templateDetails.name",
-          usageCount: 1,
+          templateCount: 1,
         },
       },
       {
-        $sort: { usageCount: -1 },
+        $sort: { templateCount: -1 },
       },
     ]);
 

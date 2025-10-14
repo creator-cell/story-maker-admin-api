@@ -28,26 +28,31 @@ export const createTemplate = async (req, res) => {
   }
 };
 export const trackTemplateUsage = async (req, res) => {
-  const { templateId, userId } = req.body;
+  const { templateId } = req.body;
 
   try {
-    const usage = new Template({
-      template: templateId,
-      user: userId,
-    });
+    const updatedTemplate = await Template.findByIdAndUpdate(
+      templateId,
+      { $inc: { templateCount: 1 } },
+      { new: true }
+    );
 
-    await usage.save();
+    if (!updatedTemplate) {
+      return res.status(404).json({ message: "Template not found" });
+    }
 
-    console.log("Template usage tracked.");
+    console.log("Template usage count updated.");
 
     res.status(200).json({
-      message: "Template usage successfully tracked",
+      message: "Template usage count successfully updated",
+      template: updatedTemplate,
     });
   } catch (err) {
-    console.error("Error tracking template usage:", err);
-    res.status(500).json({ message: "Error tracking template usage" });
+    console.error("Error updating template usage count:", err);
+    res.status(500).json({ message: "Error updating template usage count" });
   }
 };
+
 export const getAllTemplate = async (req, res) => {
   try {
     const {
@@ -59,12 +64,18 @@ export const getAllTemplate = async (req, res) => {
     } = req.query;
 
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
-
     const filters = {};
+
+    if (search) {
+      const regex = new RegExp(search, "i");
+      filters["user.name"] = regex;
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
-    let tickets = await Template.find(filters)
+    const totalCount = await Template.countDocuments(filters);
+
+    const templates = await Template.find(filters)
       .populate("user")
       .populate("category")
       .populate("subCategory")
@@ -72,15 +83,8 @@ export const getAllTemplate = async (req, res) => {
       .skip(skip)
       .limit(parseInt(pageSize));
 
-    if (search) {
-      const regex = new RegExp(search, "i");
-      Template = Template.filter((t) => regex.test(t.user?.name || ""));
-    }
-
-    const totalCount = tickets.length;
-
     res.json({
-      data: tickets,
+      data: templates,
       total: totalCount,
       page: parseInt(page),
       pageSize: parseInt(pageSize),
@@ -91,7 +95,26 @@ export const getAllTemplate = async (req, res) => {
     res.status(500).json({ message: "Error fetching templates", error });
   }
 };
-// Get template by ID
+
+export const getTopTemplate = async (req, res) => {
+  try {
+    const templates = await Template.find({})
+      .populate("user")
+      .populate("category")
+      .populate("subCategory")
+      .sort({ templateCount: -1 })
+      .limit(5);
+
+    res.json({
+      data: templates,
+      total: templates.length,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching top templates", error });
+  }
+};
+
 export const getTemplateById = async (req, res) => {
   const { id } = req.params;
 

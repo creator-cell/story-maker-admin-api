@@ -15,6 +15,10 @@ const templateSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
     },
+    templateCount: {
+      type: Number,
+      default: 0,
+    },
     subCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
