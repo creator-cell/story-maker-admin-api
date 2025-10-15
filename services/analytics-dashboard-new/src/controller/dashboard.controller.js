@@ -1,5 +1,5 @@
 import userRepository from "../respositories/userRepository.js";
-
+import User from "../models/user.model.js";
 import templateModel from "../models/template.model.js";
 import {
   getDateRange,
@@ -213,112 +213,30 @@ const templateUsed = async (req, res, next) => {
   }
 };
 
-const userGrowthData = async (req, res, next) => {
-  try {
-    let { mode, date } = req.query;
-
-    const ALL_MODE = ["month", "week", "day"];
-
-    mode =
-      mode !== undefined && mode !== null && ALL_MODE.includes(mode)
-        ? mode
-        : "day";
-    date =
-      date !== undefined && date !== null && !isNaN(new Date(date))
-        ? new Date(date)
-        : new Date();
-
-    let mainQuery = [
-      { $match: {} },
-      { $group: { _id: {}, count: { $sum: 1 } } },
-    ];
-
-    let dateRange = getDateRange(date, mode);
-
-    if (mode == "month") {
-      mainQuery[0].$match = {
-        isActive: true,
-        createdAt: {
-          $gte: new Date(dateRange?.startDate),
-          $lte: new Date(dateRange?.endDate),
+const userGrowthData = async (startDate, endDate) => {
+  const result = await User.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" },
+          day: { $dayOfMonth: "$createdAt" },
         },
-      };
-      mainQuery[1].$group._id = {
-        year: { $year: "$createdAt" },
-        month: { $month: "$createdAt" },
-        week: { $week: "$createdAt" },
-      };
-    } else if (mode == "week") {
-      mainQuery[0].$match = {
-        isActive: true,
-        createdAt: {
-          $gte: new Date(dateRange?.startDate),
-          $lte: new Date(dateRange?.endDate),
-        },
-      };
-      mainQuery[1].$group._id = {
-        year: { $year: "$createdAt" },
-        month: { $month: "$createdAt" },
-        day: { $dayOfMonth: "$createdAt" },
-      };
-      mainQuery.push({
-        $set: {
-          date: {
-            $concat: [
-              { $toString: "$_id.year" },
-              "-",
-              { $toString: "$_id.month" },
-              "-",
-              { $toString: "$_id.day" },
-            ],
-          },
-        },
-      });
-    } else {
-      dateRange.startDate = new Date(new Date(date).setHours(0, 0, 0, 0));
-      dateRange.endDate = new Date(new Date(date).setDate(date.getDate() + 1));
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+  ]);
 
-      mainQuery[0].$match = {
-        isActive: true,
-        createdAt: {
-          $gte: new Date(dateRange?.startDate),
-          $lt: new Date(dateRange?.endDate),
-        },
-      };
-      mainQuery[1].$group._id = {
-        hour: { $hour: "$createdAt" },
-      };
-    }
-
-    const [error, result] = await userRepository.aggregate(mainQuery);
-
-    if (error) {
-      console.log(error);
-      return res.status(500).json({
-        status: "fail",
-        statusCode: 500,
-        message: "Failed to get user growth data",
-        data: {},
-      });
-    }
-
-    let data = filterDataByMode(result || [], dateRange, mode);
-
-    return res.status(200).json({
-      status: "success",
-      statusCode: 200,
-      message: "Successfully get user growth data",
-      data: data,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      status: "fail",
-      statusCode: 500,
-      message: "Something want wrong",
-      data: {},
-    });
-  }
+  return result.map((item) => ({
+    date: `${item._id.year}-${item._id.month}-${item._id.day}`,
+    count: item.count,
+  }));
 };
 
 const awsStorages = async (req, res, next) => {
