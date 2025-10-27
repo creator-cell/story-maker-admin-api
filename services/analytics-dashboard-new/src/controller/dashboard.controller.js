@@ -213,30 +213,52 @@ const templateUsed = async (req, res, next) => {
   }
 };
 
-const userGrowthData = async (startDate, endDate) => {
-  const result = await User.aggregate([
-    {
-      $match: {
-        createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" },
-          day: { $dayOfMonth: "$createdAt" },
-        },
-        count: { $sum: 1 },
-      },
-    },
-    { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
-  ]);
+const userGrowthData = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query;
 
-  return result.map((item) => ({
-    date: `${item._id.year}-${item._id.month}-${item._id.day}`,
-    count: item.count,
-  }));
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json({ message: "startDate and endDate are required" });
+    }
+
+    const result = await User.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+            day: { $dayOfMonth: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]);
+
+    const formatted = result.map((item) => ({
+      date: `${item._id.year}-${String(item._id.month).padStart(
+        2,
+        "0"
+      )}-${String(item._id.day).padStart(2, "0")}`,
+      count: item.count,
+    }));
+
+    console.log("User growth:", formatted);
+    res.json({ success: true, data: formatted });
+  } catch (error) {
+    console.error("Error fetching user growth:", error);
+    next(error);
+  }
 };
 
 const awsStorages = async (req, res, next) => {

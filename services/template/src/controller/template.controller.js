@@ -67,8 +67,9 @@ export const getAllTemplate = async (req, res) => {
     const filters = {};
 
     if (search) {
+      console.log("search", search);
       const regex = new RegExp(search, "i");
-      filters["user.name"] = regex;
+      filters["name"] = regex;
     }
 
     const skip = (parseInt(page) - 1) * parseInt(pageSize);

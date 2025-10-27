@@ -15,9 +15,23 @@ const handleSendMails = async (req, res, next) => {
     const userId = req.user.userId;
     const { message } = req.body;
 
-    const [ err, data ] = await userRepository.findMany({"email": { $ne: "" }, isActive: true});
+    const [err, data] = await userRepository.findMany({
+      email: { $ne: "" },
+      isActive: true,
+    });
 
-    let emails = data?.length > 0 ? data?.filter(p => { if (p?.role?.name?.toLowerCase() == "user") { return p }  })?.map(p => { return p?.email }) : [];
+    let emails =
+      data?.length > 0
+        ? data
+            ?.filter((p) => {
+              if (p?.role?.name?.toLowerCase() == "user") {
+                return p;
+              }
+            })
+            ?.map((p) => {
+              return p?.email;
+            })
+        : [];
 
     if (emails.length <= 0) {
       return res.status(404).json({
@@ -74,11 +88,25 @@ const handleSendSms = async (req, res, next) => {
     const userId = req.user.userId;
     const { message } = req.body;
 
-    const [ err, data ] = await userRepository.findMany({"phone": { $ne: "" }, isActive: true});
+    const [err, data] = await userRepository.findMany({
+      phone: { $ne: "" },
+      isActive: true,
+    });
 
     if (err) console.log(err);
 
-    let numbers = data?.length > 0 ? data?.filter(p => { if (p?.role?.name?.toLowerCase() == "user") { return p } })?.map(p => {return `${p?.phone}`}) : [];
+    let numbers =
+      data?.length > 0
+        ? data
+            ?.filter((p) => {
+              if (p?.role?.name?.toLowerCase() == "user") {
+                return p;
+              }
+            })
+            ?.map((p) => {
+              return `${p?.phone}`;
+            })
+        : [];
 
     numbers = [...new Set(numbers)];
 
@@ -103,15 +131,15 @@ const handleSendSms = async (req, res, next) => {
     return res.status(200).json({
       status: "success",
       statusCode: 200,
-      message: "Sms sended successfully",
-      data: {}
+      message: "Sms send successfully",
+      data: {},
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       status: "fail",
       statusCoded: 500,
-      message: "Something want wrong",
+      message: "Something went wrong",
       data: {},
     });
   }
@@ -133,13 +161,16 @@ const getNotification = async (req, res, next) => {
 
     let baseFilter = {};
 
-    const {error, data} = await notificationRepository.getManyWithPagination(baseFilter, {
-      page: parseInt(page),
-      pageSize: parseInt(pageSize),
-      search,
-      filters,
-      sort,
-    });
+    const { error, data } = await notificationRepository.getManyWithPagination(
+      baseFilter,
+      {
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+        search,
+        filters,
+        sort,
+      }
+    );
 
     if (error) {
       return res
@@ -151,15 +182,14 @@ const getNotification = async (req, res, next) => {
       status: "success",
       statusCode: 200,
       message: "Successfully get notification history",
-      data: data
+      data: data,
     });
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       status: "fail",
       statusCode: 500,
-      message: "Something want wrong",
+      message: "Something went wrong",
       data: {},
     });
   }
