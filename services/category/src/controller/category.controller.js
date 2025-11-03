@@ -1,5 +1,5 @@
 import categoryRepository from "../respositories/categoryRepository.js";
-
+import Category from "../models/category.model.js";
 // Create Category
 export const createCategory = async (req, res) => {
   const { name, description, parentCategory, assets, templates, slug } =
@@ -44,47 +44,43 @@ export const createCategory = async (req, res) => {
 export const getAllCategories = async (req, res) => {
   try {
     const {
-      page,
-      pageSize,
+      page = 1,
+      pageSize = 10,
+      search,
       sortBy = "createdAt",
       sortOrder = "desc",
-      search,
     } = req.query;
 
-    if (page || pageSize) {
-      const options = {
-        page: parseInt(page) || 1,
-        pageSize: parseInt(pageSize) || 10,
-        sortBy,
-        sortOrder,
-        search,
-      };
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+    const filters = {};
 
-      const [error, result] =
-        await categoryRepository.getCategoriesWithPagination(options);
-      if (error) {
-        return res.status(500).json({ message: "Something went wrong" });
-      }
-
-      res.json({
-        message: "Categories retrieved successfully",
-        items: result.items,
-        pagination: result.pagination,
-      });
-    } else {
-      const [error, categories] = await categoryRepository.findMany();
-      if (error) {
-        return res.status(500).json({ message: "Something went wrong" });
-      }
-
-      res.json({
-        message: "Categories retrieved successfully",
-        categories,
-      });
+    if (search) {
+      const regex = new RegExp(search, "i");
+      filters["name"] = regex;
     }
-  } catch (err) {
-    console.error("Get all categories error:", err);
-    res.status(500).json({ message: "Something went wrong" });
+
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+    const totalCount = await Category.countDocuments(filters);
+
+    const categories = await Category.find(filters)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(pageSize));
+
+    res.json({
+      message: "Categories retrieved successfully",
+      items: categories,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+        totalPages: Math.ceil(totalCount / parseInt(pageSize)),
+      },
+    });
+  } catch (error) {
+    console.error("Get all categories error:", error);
+    res.status(500).json({ message: "Error fetching categories", error });
   }
 };
 
