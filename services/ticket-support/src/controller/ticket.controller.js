@@ -34,16 +34,28 @@ export const getAllTicket = async (req, res) => {
     } = req.query;
 
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
-
     const filters = {};
+
     if (role === "user") {
       filters.userId = user;
     } else if (role === "moderator") {
       filters.moderator = user;
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+    let totalFilter = { ...filters };
 
+    if (search) {
+      const regex = new RegExp(search, "i");
+      totalFilter.$or = [
+        { message: regex },
+        { status: regex },
+        { "userId.name": regex },
+      ];
+    }
+
+    const totalCount = await Ticket.countDocuments(totalFilter);
+
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
     let tickets = await Ticket.find(filters)
       .populate("userId")
       .populate("moderator")
@@ -60,8 +72,6 @@ export const getAllTicket = async (req, res) => {
           regex.test(t.userId?.name || "")
       );
     }
-
-    const totalCount = tickets.length;
 
     res.json({
       data: tickets,
