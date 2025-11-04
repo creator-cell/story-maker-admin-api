@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "analytics-dashboard",
       script: "./index.js",
-      cwd: "./services/analytics-dashboard",
+      cwd: "./services/analytics-dashboard-new",
       namespace: "story-maker-admin",
       watch: false,
       exec_mode: "fork",
