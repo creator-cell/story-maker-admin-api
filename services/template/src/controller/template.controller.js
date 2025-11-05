@@ -129,6 +129,7 @@ export const getTemplateById = async (req, res) => {
     }
     await template.populate("category");
     await template.populate("subCategory");
+    await template.populate("user");
     res.json({
       message: "template retrieved successfully",
       template,
