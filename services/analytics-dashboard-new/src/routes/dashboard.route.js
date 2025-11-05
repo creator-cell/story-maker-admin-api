@@ -7,6 +7,7 @@ import {
   userGrowthData,
   templateCreated,
   templateUsed,
+  assetsCreated,
 } from "../controller/dashboard.controller.js";
 
 const dashboardRoute = express.Router();
@@ -22,5 +23,7 @@ dashboardRoute.get("/user-growth", userGrowthData);
 dashboardRoute.get("/storage", awsStorages);
 
 dashboardRoute.get("/top", topTemplateAssets);
+
+dashboardRoute.get("/assets", assetsCreated);
 
 export default dashboardRoute;

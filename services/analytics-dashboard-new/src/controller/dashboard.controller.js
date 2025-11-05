@@ -1,6 +1,7 @@
 import userRepository from "../respositories/userRepository.js";
 import User from "../models/user.model.js";
 import templateModel from "../models/template.model.js";
+import Assets from "../models/assets.model.js";
 import {
   getDateRange,
   getDateWeek,
@@ -174,6 +175,27 @@ const templateCreated = async (req, res, next) => {
   }
 };
 
+const assetsCreated = async (req, res, next) => {
+  try {
+    const data = await Assets.countDocuments();
+    return res.status(200).json({
+      status: "success",
+      statusCode: 200,
+      message: "Data fetched successfully.",
+      data: {
+        templateCount: data,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: "fail",
+      statusCode: 500,
+      message: "Something went wrong",
+      data: {},
+    });
+  }
+};
 const templateUsed = async (req, res, next) => {
   try {
     const allTemplatesUsage = await templateModel.aggregate([
@@ -304,4 +326,5 @@ export {
   topTemplateAssets,
   templateCreated,
   templateUsed,
+  assetsCreated,
 };
