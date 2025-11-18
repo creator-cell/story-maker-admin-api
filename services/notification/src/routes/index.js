@@ -5,12 +5,12 @@ import notificationRoute from './notification.route.js';
 
 const router = express.Router();
 
-// Prefix your routes here
-router.use('/notification', notificationRoute);
-
 // Health check route
 router.get('/health', (req, res) => {
   res.json({ success: true, message: 'API is healthy 🚀' });
 });
+
+// Prefix your routes here
+router.use('/', notificationRoute);
 
 export default router;

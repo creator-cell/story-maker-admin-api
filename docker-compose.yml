@@ -4,7 +4,7 @@ services:
   api-gateway:
     build: ./gateway
     ports:
-      - "8080:8080"
+      - "2000:2000"
     depends_on:
       - auth
       - user

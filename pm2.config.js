@@ -7,8 +7,7 @@ module.exports = {
       namespace: "story-maker-admin",
       watch: false,
       exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 8080 },
-      pre_start: "npm install"
+      env: { NODE_ENV: "development", PORT: 2000 }
     },
     {
       name: "auth",
@@ -18,7 +17,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3001 },
-      pre_start: "npm install"
     },
     {
       name: "user",
@@ -28,7 +26,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3002 },
-      pre_start: "npm install"
     },
     {
       name: "analytics-dashboard",
@@ -38,7 +35,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3003 },
-      pre_start: "npm install"
     },
     {
       name: "assets",
@@ -48,7 +44,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3004 },
-      pre_start: "npm install"
     },
     {
       name: "billing-subscription",
@@ -58,7 +53,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3005 },
-      pre_start: "npm install"
     },
     {
       name: "category",
@@ -68,7 +62,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3006 },
-      pre_start: "npm install"
     },
     {
       name: "notification",
@@ -78,7 +71,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3007 },
-      pre_start: "npm install"
     },
     {
       name: "template",
@@ -88,7 +80,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3008 },
-      pre_start: "npm install"
     },
     {
       name: "ticket-support",
@@ -98,7 +89,6 @@ module.exports = {
       watch: false,
       exec_mode: "fork",
       env: { NODE_ENV: "development", PORT: 3009 },
-      pre_start: "npm install"
     }
   ]
 };
