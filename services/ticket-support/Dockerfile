@@ -1,8 +1,7 @@
-# auth-service/Dockerfile
 FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 3007
-CMD ["node", "index.js"]
+EXPOSE 3009
+CMD [ "node", "index.js" ]

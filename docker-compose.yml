@@ -8,6 +8,13 @@ services:
     depends_on:
       - auth
       - user
+      - dashboard
+      - assets
+      - billing-subscription
+      - category
+      - notification
+      - template
+      - ticket-support
     env_file:
       - ./gateway/.env
     networks:
@@ -28,6 +35,69 @@ services:
       - "3002:3002"
     env_file:
       - ./services/user/.env.local
+    networks:
+      - backend
+    
+  dashboard:
+    build: ./services/analytics-dashboard-new
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./services/analytics-dashboard-new/.env.local
+    networks:
+      - backend
+    
+  assets:
+    build: ./services/assets
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./services/assets/.env.local
+    networks:
+      - backend
+  
+  billing-subscription:
+    build: ./services/bulling-subscription
+    ports:
+      - "3005:3005"
+    env_file:
+      - ./services/billing-subscription/.env.local
+    networks:
+      - backend
+  
+  category:
+    build: ./services/category
+    ports:
+      - "3006:3006"
+    env_file:
+      - ./services/category/.env.local
+    networks:
+      - backend
+  
+  notification:
+    build: ./services/notification
+    ports:
+      - "3007:3007"
+    env_file:
+      - ./services/notification/.env.local
+    networks:
+      - backend
+  
+  template:
+    build: ./services/template
+    ports: 
+      - "3008:3008"
+    env_file:
+      - ./services/template/.env.local
+    networks:
+      - backend
+  
+  ticket-support:
+    build: ./services/ticket-support
+    ports:
+      - "3009:3009"
+    env_file:
+      - ./services/ticket-support/.env.local
     networks:
       - backend
 

@@ -1,22 +1,14 @@
 module.exports = {
   apps: [
     {
-      name: "analytics-dashboard",
+      name: "gateway",
       script: "./index.js",
-      cwd: "./services/analytics-dashboard-new",
+      cwd: "./gateway",
       namespace: "story-maker-admin",
       watch: false,
       exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5010 },
-    },
-    {
-      name: "assets",
-      script: "./index.js",
-      cwd: "./services/assets",
-      namespace: "story-maker-admin",
-      watch: false,
-      exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5002 },
+      env: { NODE_ENV: "development", PORT: 8080 },
+      pre_start: "npm install"
     },
     {
       name: "auth",
@@ -25,52 +17,8 @@ module.exports = {
       namespace: "story-maker-admin",
       watch: false,
       exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5000 },
-    },
-    {
-      name: "billing-subscription",
-      script: "./index.js",
-      cwd: "./services/billing-subscription",
-      namespace: "story-maker-admin",
-      watch: false,
-      exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5008 },
-    },
-    {
-      name: "category",
-      script: "./index.js",
-      cwd: "./services/category",
-      namespace: "story-maker-admin",
-      watch: false,
-      exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5006 },
-    },
-    {
-      name: "notification",
-      script: "./index.js",
-      cwd: "./services/notification",
-      namespace: "story-maker-admin",
-      watch: false,
-      exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5009 }
-    },
-    {
-      name: "template",
-      script: "./index.js",
-      cwd: "./services/template",
-      namespace: "story-maker-admin",
-      watch: false,
-      exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 4000 }
-    },
-    {
-      name: "ticket-support",
-      script: "./index.js",
-      cwd: "./services/ticket-support",
-      namespace: "story-maker-admin",
-      watch: false,
-      exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5005 }
+      env: { NODE_ENV: "development", PORT: 3001 },
+      pre_start: "npm install"
     },
     {
       name: "user",
@@ -79,7 +27,78 @@ module.exports = {
       namespace: "story-maker-admin",
       watch: false,
       exec_mode: "fork",
-      env: { NODE_ENV: "development", PORT: 5001 },
+      env: { NODE_ENV: "development", PORT: 3002 },
+      pre_start: "npm install"
+    },
+    {
+      name: "analytics-dashboard",
+      script: "./index.js",
+      cwd: "./services/analytics-dashboard-new",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3003 },
+      pre_start: "npm install"
+    },
+    {
+      name: "assets",
+      script: "./index.js",
+      cwd: "./services/assets",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3004 },
+      pre_start: "npm install"
+    },
+    {
+      name: "billing-subscription",
+      script: "./index.js",
+      cwd: "./services/billing-subscription",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3005 },
+      pre_start: "npm install"
+    },
+    {
+      name: "category",
+      script: "./index.js",
+      cwd: "./services/category",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3006 },
+      pre_start: "npm install"
+    },
+    {
+      name: "notification",
+      script: "./index.js",
+      cwd: "./services/notification",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3007 },
+      pre_start: "npm install"
+    },
+    {
+      name: "template",
+      script: "./index.js",
+      cwd: "./services/template",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3008 },
+      pre_start: "npm install"
+    },
+    {
+      name: "ticket-support",
+      script: "./index.js",
+      cwd: "./services/ticket-support",
+      namespace: "story-maker-admin",
+      watch: false,
+      exec_mode: "fork",
+      env: { NODE_ENV: "development", PORT: 3009 },
+      pre_start: "npm install"
     }
-  ],
+  ]
 };
