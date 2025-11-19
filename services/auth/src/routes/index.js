@@ -5,11 +5,12 @@ import userRoutes from './user/index.js';
 
 const router = express.Router();
 
-// Prefix your routes here
-router.use('/users', userRoutes);
 // Health check route
 router.get('/health', (req, res) => {
   res.json({ success: true, message: 'API is healthy 🚀' });
 });
+
+// Prefix your routes here
+router.use('/', userRoutes);
 
 export default router;

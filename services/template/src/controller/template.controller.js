@@ -1,5 +1,6 @@
 import templateRepository from "../respositories/templateRepository.js";
 import Template from "../models/template.model.js";
+import Category from "../models/category.model.js";
 // Create template
 export const createTemplate = async (req, res) => {
   const { name, content, category, status, subCategory, user } = req.body;
