@@ -19,7 +19,7 @@ const TICKET_SUPPORT_SERVICE_PORT = process.env.TICKET_SUPPORT_SERVICE_PORT || 3
 app.use(
   "/auth",
   createProxyMiddleware({
-    target: `http://auth:${AUTH_SERVICE_PORT}`,
+    target: `http://localhost:${AUTH_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/auth": "" },
   })
@@ -28,7 +28,7 @@ app.use(
 app.use(
   "/user",
   createProxyMiddleware({
-    target: `http://user:${USER_SERVICE_PORT}`,
+    target: `http://localhost:${USER_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/user": "" },
   })
@@ -37,7 +37,7 @@ app.use(
 app.use(
   "/dashboard",
   createProxyMiddleware({
-    target: `http://dashboard:${DASHBOARD_SERVICE_PORT}`,
+    target: `http://localhost:${DASHBOARD_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/dashboard": "" },
   })
@@ -46,7 +46,7 @@ app.use(
 app.use(
   "/assets",
   createProxyMiddleware({
-    target: `http://assets:${ASSETS_SERVICE_PORT}`,
+    target: `http://localhost:${ASSETS_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/assets": "" },
   })
@@ -55,7 +55,7 @@ app.use(
 app.use(
   "/billing-subscription",
   createProxyMiddleware({
-    target: `http://billing-subscription:${BILLING_SUBSCRIPTION_SERVICE_PORT}`,
+    target: `http://localhost:${BILLING_SUBSCRIPTION_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/billing-subscription": "" },
   })
@@ -64,7 +64,7 @@ app.use(
 app.use(
   "/category",
   createProxyMiddleware({
-    target: `http://category:${CATEGORY_SERVICE_PORT}`,
+    target: `http://localhost:${CATEGORY_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/category": "" },
   })
@@ -73,7 +73,7 @@ app.use(
 app.use(
   "/notification",
   createProxyMiddleware({
-    target: `http://notification:${NOTIFICATION_SERVICE_PORT}`,
+    target: `http://localhost:${NOTIFICATION_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/notification": "" },
   })
@@ -82,7 +82,7 @@ app.use(
 app.use(
   "/template",
   createProxyMiddleware({
-    target: `http://template:${TEMPLATE_SERVICE_PORT}`,
+    target: `http://localhost:${TEMPLATE_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/template": "" },
   })
@@ -91,7 +91,7 @@ app.use(
 app.use(
   "/ticket-support",
   createProxyMiddleware({
-    target: `http://ticket-support:${TICKET_SUPPORT_SERVICE_PORT}`,
+    target: `http://localhost:${TICKET_SUPPORT_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/ticket-support": "" },
   })
