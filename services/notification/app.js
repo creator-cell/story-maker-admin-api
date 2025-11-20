@@ -23,7 +23,13 @@ const app = express();
 
 // Middlewares
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: "*",
+    allowedHeaders: "*"
+  })
+);
 
 app.use('/uploads', express.static(path.join(__dirname, 'src', 'uploads')));
 app.use(morgan('dev'));

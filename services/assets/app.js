@@ -22,8 +22,17 @@ app.use(i18nMiddleware);
 // Static Files
 
 // Middlewares
+// Middlewares
 app.use(helmet());
-app.use(cors());
+
+app.use(
+  cors({
+    origin: "*",
+    methods: "*",
+    allowedHeaders: "*"
+  })
+);
+
 console.log(path.join(__dirname, 'uploads','assets'));
 app.use('/uploads', express.static(path.join(__dirname, 'src', 'uploads')));
 app.use(morgan('dev'));
