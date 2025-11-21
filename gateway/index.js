@@ -4,6 +4,20 @@ require("dotenv").config();
 
 const app = express();
 
+// Basic CORS handling so browsers can call the gateway from the frontend origin
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 const APP_PORT = process.env.PORT || 2000;
 const AUTH_SERVICE_PORT = process.env.AUTH_SERVICE_PORT || 3001;
 const USER_SERVICE_PORT = process.env.USER_SERVICE_PORT || 3002;
