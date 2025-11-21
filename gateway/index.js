@@ -29,11 +29,12 @@ const NOTIFICATION_SERVICE_PORT = process.env.NOTIFICATION_SERVICE_PORT || 3007;
 const TEMPLATE_SERVICE_PORT = process.env.TEMPLATE_SERVICE_PORT || 3008;
 const TICKET_SUPPORT_SERVICE_PORT = process.env.TICKET_SUPPORT_SERVICE_PORT || 3009;
 
+const HOST_NAME = process.env.HOST || 'localhost';
 
 app.use(
   "/auth",
   createProxyMiddleware({
-    target: `http://localhost:${AUTH_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${AUTH_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/auth": "" },
   })
@@ -42,7 +43,7 @@ app.use(
 app.use(
   "/user",
   createProxyMiddleware({
-    target: `http://localhost:${USER_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${USER_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/user": "" },
   })
@@ -51,7 +52,7 @@ app.use(
 app.use(
   "/dashboard",
   createProxyMiddleware({
-    target: `http://localhost:${DASHBOARD_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${DASHBOARD_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/dashboard": "" },
   })
@@ -60,7 +61,7 @@ app.use(
 app.use(
   "/assets",
   createProxyMiddleware({
-    target: `http://localhost:${ASSETS_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${ASSETS_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/assets": "" },
   })
@@ -69,7 +70,7 @@ app.use(
 app.use(
   "/billing-subscription",
   createProxyMiddleware({
-    target: `http://localhost:${BILLING_SUBSCRIPTION_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${BILLING_SUBSCRIPTION_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/billing-subscription": "" },
   })
@@ -78,7 +79,7 @@ app.use(
 app.use(
   "/category",
   createProxyMiddleware({
-    target: `http://localhost:${CATEGORY_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${CATEGORY_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/category": "" },
   })
@@ -87,7 +88,7 @@ app.use(
 app.use(
   "/notification",
   createProxyMiddleware({
-    target: `http://localhost:${NOTIFICATION_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${NOTIFICATION_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/notification": "" },
   })
@@ -96,7 +97,7 @@ app.use(
 app.use(
   "/template",
   createProxyMiddleware({
-    target: `http://localhost:${TEMPLATE_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${TEMPLATE_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/template": "" },
   })
@@ -105,12 +106,12 @@ app.use(
 app.use(
   "/ticket-support",
   createProxyMiddleware({
-    target: `http://localhost:${TICKET_SUPPORT_SERVICE_PORT}`,
+    target: `http://${HOST_NAME}:${TICKET_SUPPORT_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/ticket-support": "" },
   })
 );
 
 app.listen(APP_PORT, () => {
-  console.log(`API Gateway running at http://localhost:${APP_PORT}`);
+  console.log(`API Gateway running at http://${HOST_NAME}:${APP_PORT}`);
 });
