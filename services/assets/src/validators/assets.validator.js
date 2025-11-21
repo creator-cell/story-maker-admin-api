@@ -40,6 +40,14 @@ const validateCreateAssets = [
         .if(body("description").notEmpty())
         .isString()
         .withMessage("Description must be string"),
+    check("category")
+        .if(body("category").notEmpty())
+        .custom((value) => {
+            if (!mongoose.isValidObjectId(value)) {
+                throw new Error("Invalid category");
+            }
+            return true;
+        }),
     check("tags")
         .if(body("tags").notEmpty())
         .isArray()
@@ -78,6 +86,14 @@ const validateUpdateAssets = [
         .if(body("description").notEmpty())
         .isString()
         .withMessage("Description must be string"),
+    check("category")
+        .if(body("category").notEmpty())
+        .custom((value) => {
+            if (!mongoose.isValidObjectId(value)) {
+                throw new Error("Invalid category");
+            }
+            return true;
+        }),
     check("tags")
         .if(body("tags").notEmpty())
         .isArray()

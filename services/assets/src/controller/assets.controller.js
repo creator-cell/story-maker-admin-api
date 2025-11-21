@@ -10,6 +10,7 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { uploadMediaToCloudinary } from "../helper/cloudinary.js";
+import categoryRepository from "../respositories/categoryRepository.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,12 +20,25 @@ const addAsset = async (req, res, next) => {
     const reqData = req.body;
     const document = req.file;
     const { isTemplateUpload } = req.query;
+    const categoryId = reqData.category;
 
     if (!document) {
       return res.status(400).json({
         success: false,
         message: "Please upload a document. It is required.",
       });
+    }
+
+    if (categoryId) {
+      const [errors,category] = await categoryRepository.findOneById(categoryId, {});
+      if (!category) {
+        return res.status(404).json({
+          status: "fail",
+          statusCode: 404,
+          data: {},
+          message: "Category is not found"
+        });
+      }
     }
 
     const fileName = `${Date.now()}-${document.originalname}`;
@@ -62,6 +76,18 @@ const addAsset = async (req, res, next) => {
       });
     }
 
+    if (categoryId) {
+      const [errors2, result2] = await categoryRepository.addAsset(categoryId, result?._id);
+      if (errors2) {
+        console.log(errors2);
+        return res.status(500).json({
+          status: "fail",
+          statusCode: 500,
+          message: "Something went wrong while saving category data.",
+        });
+      }
+    }
+
     return res.status(201).json({
       status: "success",
       statusCode: 201,
@@ -80,8 +106,8 @@ const addAsset = async (req, res, next) => {
 const fetchAsset = async (req, res, next) => {
   try {
     const {
-      page,
-      pageSize,
+      page = 1,
+      pageSize = 10,
       sortBy = "createdAt",
       sortOrder = "desc",
       search,
@@ -104,7 +130,7 @@ const fetchAsset = async (req, res, next) => {
     });
 
     if (id && mongoose.isValidObjectId(id)) {
-      const [error, result] = await assetsRepository.findOneById(id);
+      const [error, result] = await assetsRepository.findById(id);
       if (!result) {
         return res.status(404).json({
           status: "fail",
@@ -119,13 +145,15 @@ const fetchAsset = async (req, res, next) => {
       const options = {
         page: parseInt(page) || 1,
         pageSize: parseInt(pageSize) || 10,
-        sortBy,
+        sort: sortBy ? { [sortBy]: -1 } : null,
         sortOrder,
         search,
         menuName,
       };
 
-      const { error, data } = await assetsRepository.getManyWithPagination(
+      console.log(options);
+
+      const [ error, data ] = await assetsRepository.getManyWithPagination(
         {},
         options
       );
@@ -184,6 +212,7 @@ const updateAsset = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
+    const categoryId = data?.category;
 
     const document = req.file;
 
@@ -198,6 +227,18 @@ const updateAsset = async (req, res, next) => {
         message: "Asset not found",
         data: {},
       });
+    }
+
+    if (categoryId) {
+      const [errors,category] = await categoryRepository.findOneById(categoryId, {});
+      if (!category) {
+        return res.status(404).json({
+          status: "fail",
+          statusCode: 404,
+          data: {},
+          message: "Category is not found"
+        });
+      }
     }
 
     const oldUrl = assets?.url;
@@ -235,6 +276,14 @@ const updateAsset = async (req, res, next) => {
       await DeleteFile(oldUrl?.split(".com/")?.[1]);
     }
 
+    if (assets?.category?._id) {
+      await categoryRepository.removeAssets(assets?.category?._id, id);
+    }
+
+    if (categoryId) {
+      await categoryRepository.addAsset(categoryId, id);
+    }
+
     res.status(200).json({
       status: "success",
       statusCode: 200,
@@ -256,7 +305,7 @@ const deleteAssets = async (req, res, next) => {
   try {
     const { id } = req?.params;
 
-    const [err, assets] = await assetsRepository.findOneById(id, {});
+    const [err, assets] = await assetsRepository.findById(id);
 
     if (!assets) {
       return res.status(404).json({
@@ -270,6 +319,10 @@ const deleteAssets = async (req, res, next) => {
     await DeleteFile(assets?.url?.split(".com/")?.[1]);
 
     await assetsRepository.deleteOne({ _id: new mongoose.Types.ObjectId(id) });
+
+    if (assets?.category) {
+      await categoryRepository.removeAssets(assets?.category?._id, id);
+    }
 
     return res.status(200).json({
       status: "success",
@@ -292,9 +345,9 @@ const cloneAssets = async (req, res, next) => {
   try {
     const { assetId } = req.body;
 
-    const [err, assetData] = await assetsRepository.findOneById(assetId);
+    const [err, assetData] = await assetsRepository.findById(assetId);
 
-    if (!assetData?._doc) {
+    if (!assetData) {
       return res.status(404).json({
         status: "fail",
         statusCode: 404,
@@ -303,7 +356,7 @@ const cloneAssets = async (req, res, next) => {
       });
     }
 
-    let { _id, ...reqData } = assetData?._doc;
+    let { _id, ...reqData } = assetData;
 
     const assetFileName = assetData?.url?.split("assets/")?.[1];
 
@@ -348,6 +401,10 @@ const cloneAssets = async (req, res, next) => {
         message: "Something went wrong",
         data: {},
       });
+    }
+
+    if (assetData?.category?._id) {
+      await categoryRepository.addAsset(assetData?.category?._id, result?._id);
     }
 
     return res.status(201).json({
