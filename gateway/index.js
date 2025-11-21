@@ -34,7 +34,7 @@ const HOST_NAME = process.env.HOST || 'localhost';
 app.use(
   "/auth",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${AUTH_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${AUTH_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/auth": "" },
   })
@@ -43,7 +43,7 @@ app.use(
 app.use(
   "/user",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${USER_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${USER_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/user": "" },
   })
@@ -52,7 +52,7 @@ app.use(
 app.use(
   "/dashboard",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${DASHBOARD_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${DASHBOARD_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/dashboard": "" },
   })
@@ -61,7 +61,7 @@ app.use(
 app.use(
   "/assets",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${ASSETS_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${ASSETS_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/assets": "" },
   })
@@ -70,7 +70,7 @@ app.use(
 app.use(
   "/billing-subscription",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${BILLING_SUBSCRIPTION_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${BILLING_SUBSCRIPTION_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/billing-subscription": "" },
   })
@@ -79,7 +79,7 @@ app.use(
 app.use(
   "/category",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${CATEGORY_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${CATEGORY_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/category": "" },
   })
@@ -88,7 +88,7 @@ app.use(
 app.use(
   "/notification",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${NOTIFICATION_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${NOTIFICATION_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/notification": "" },
   })
@@ -97,7 +97,7 @@ app.use(
 app.use(
   "/template",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${TEMPLATE_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${TEMPLATE_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/template": "" },
   })
@@ -106,12 +106,12 @@ app.use(
 app.use(
   "/ticket-support",
   createProxyMiddleware({
-    target: `http://${HOST_NAME}:${TICKET_SUPPORT_SERVICE_PORT}`,
+    target: `${HOST_NAME}:${TICKET_SUPPORT_SERVICE_PORT}`,
     changeOrigin: true,
     pathRewrite: { "^/ticket-support": "" },
   })
 );
 
 app.listen(APP_PORT, () => {
-  console.log(`API Gateway running at http://${HOST_NAME}:${APP_PORT}`);
+  console.log(`API Gateway running at ${HOST_NAME}:${APP_PORT}`);
 });
