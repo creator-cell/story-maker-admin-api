@@ -62,7 +62,6 @@ const findAssets = async (matchQuery = {}, projection, sort, limit, skip) => {
       });
     }
 
-    console.log(query);
 
     const assets = await Assets.aggregate(query);
     if (!assets || assets?.length == 0) {
